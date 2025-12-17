@@ -1,7 +1,7 @@
 <?php
 $servername = "localhost";
 $username = "root";
-$password = "";
+$password = "kerymy";
 $dbname = "smartwallet";
 
 $conn = new mysqli($servername, $username, $password, $dbname);

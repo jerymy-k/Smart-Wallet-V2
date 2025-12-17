@@ -1,6 +1,6 @@
 <?php
-require_once('config.php');
-require_once('otp.php');
+require "config.php";
+require "otp.php";
 session_start();
 $email = $_POST['email'];
 $password = $_POST['password'];
