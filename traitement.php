@@ -33,4 +33,4 @@ if (isset($_POST['montant_expenses'])) {
     $sql = "INSERT INTO expenses (montant , descri ) VALUES ('$montant_expenses' , '$expenses_desc')";
     $conn->query($sql);
 }
-// header("location: index.php");
+header("location: index.php");

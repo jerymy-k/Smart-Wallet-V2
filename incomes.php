@@ -14,7 +14,7 @@ $bank_name = $conn->prepare("SELECT id ,bank_name FROM cards WHERE user_id = ?")
 $bank_name->bind_param("i", $id);
 $bank_name->execute();
 $bank_name = $bank_name->get_result(); 
-$incomes = $conn->prepare("SELECT i.id , i.montant ,  i.laDate ,i.descri , c.card_name FROM incomes i LEFT JOIN cards c ON i.card_id = c.id WHERE i.user_id = ?;");
+$incomes = $conn->prepare("SELECT i.id , i.montant ,  i.laDate ,i.descri , c.card_name , c.bank_name FROM incomes i LEFT JOIN cards c ON i.card_id = c.id WHERE i.user_id = ?;");
 $incomes->bind_param("i", $id);
 $incomes->execute();
 $incomes = $incomes->get_result();
@@ -173,6 +173,7 @@ $incomes = $incomes->get_result();
                                     <th class="px-6 py-4">Date</th>
                                     <th class="px-6 py-4">Description</th>
                                     <th class="px-6 py-4">card name</th>
+                                    <th class="px-6 py-4">bank name</th>
                                     <th class="px-6 py-4 text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -183,8 +184,9 @@ $incomes = $incomes->get_result();
                                         echo "<tr class='hover:bg-gray-50 dark:hover:bg-white/5 transition-colors'>
                                             <td class='px-6 py-4 text-green-600 dark:text-green-400 font-semibold'>$" . number_format($row['montant'], 2) . "</td>
                                             <td class='px-6 py-4'>" . date("d M Y", strtotime($row['laDate'])) . "</td>
-                                            <td class='px-6 py-4 max-w-xs truncate'>{$row['descri']}</td>
+                                            <td class='px-6 py-4 max-w-xs truncate'>{$row['descri']}</td>                                          
                                             <td class='px-6 py-4 max-w-xs truncate'>{$row['card_name']}</td>
+                                            <td class='px-6 py-4 max-w-xs truncate'>{$row['bank_name']}</td>
                                             <td class='px-6 py-4 text-center'>
                                                 <div class='flex justify-center gap-3'>
                                                     <a href='form_incomes_edit.php?id={$row['id']}' class='inline-flex items-center gap-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition'>
@@ -200,7 +202,6 @@ $incomes = $incomes->get_result();
                                 } else {
                                     echo "<tr><td colspan='5' class='px-6 py-12 text-center text-gray-500 dark:text-gray-400'>No incomes found</td></tr>";
                                 }
-                                // $conn->query('hna kanktbo sql ')
                                 ?>
                             </tbody>
                         </table>

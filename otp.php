@@ -75,7 +75,7 @@ function mailsender($email, $otp)
                             </p>
                             
                             <p style="text-align: center; margin-top: 30px;">
-                                <a href="http://localhost/stitch_web_app_dashboard/verify_otp.php?otp=' . $otp . '" target="_blank" style="display: inline-block; padding: 12px 25px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                                <a href="http://smartwallet.local/verify_otp.php?otp=' . $otp . '" target="_blank" style="display: inline-block; padding: 12px 25px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
                                     Activer Mon Compte
                                 </a>
                             </p>

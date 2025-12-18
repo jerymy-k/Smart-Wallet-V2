@@ -22,7 +22,7 @@
 
             <div class="form-group">
                 <label>Banque *</label>
-                <select name="card_name" required>
+                <select name="bank_name" required>
                     <option value="">Choisir une banque</option>
                     <option value="Attijariwafa Bank">Attijariwafa Bank</option>
                     <option value="Banque Populaire">Banque Populaire</option>
