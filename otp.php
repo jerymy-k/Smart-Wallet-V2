@@ -1,18 +1,25 @@
 <?php
+require __DIR__ . '/vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
 function mailsender($email, $otp)
 {
+    $mailEmail = $_ENV['MAIL_EMAIL'];
+    $mailPassword = $_ENV['MAIL_PASSWORD'];
     $mail = new PHPMailer(true);
 
     // SMTP Settings
     $mail->isSMTP();
     $mail->Host = 'smtp.gmail.com';
     $mail->SMTPAuth = true;
-    $mail->Username = 'karimimoha0@gmail.com';
-    $mail->Password = 'yppl pdnh fyeg xrar';  // App Password
+    $mail->Username = $mailEmail;
+    $mail->Password = $mailPassword;  // App Password
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port = 587;
 
@@ -121,7 +128,7 @@ function sendNewIPNotification($email, $username, $ipAddress, $loginTime)
 
     // Encoding UTF-8
     $mail->CharSet = 'UTF-8';
-    
+
     // Expéditeur
     $mail->setFrom('karimimoha0@gmail.com', 'SmartWallet Security');
 
@@ -131,7 +138,7 @@ function sendNewIPNotification($email, $username, $ipAddress, $loginTime)
     // Sujet
     $mail->Subject = "⚠️ Nouvelle connexion détectée - SmartWallet";
     $mail->IsHTML(true);
-    
+
     // Corps du message
     $mail->Body = '
 <!DOCTYPE html>

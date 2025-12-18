@@ -1,7 +1,28 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 require_once("config.php");
+session_start();
+if (isset($_SESSION['id'])) {
+    $id = $_SESSION['id'];
+    $reslt = $conn->query("SELECT stat FROM userinfo WHERE id = $id");
+    $auth = $reslt->fetch_assoc();
+}
+if (!$auth['stat']) {
+    header("location: authentication.php");
+}
+$id = $_SESSION['id'];
+// Banks
+$bank_name = $conn->prepare("SELECT id, bank_name FROM cards WHERE user_id = ?");
+$bank_name->bind_param("i", $id);
+$bank_name->execute();
+$bank_name = $bank_name->get_result();
 
-
+// Categories
+$cate_result = $conn->prepare("SELECT id, cate FROM categorie");
+$cate_result->execute();
+$cate_result = $cate_result->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -10,10 +31,12 @@ require_once("config.php");
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>SmartWallet - Incomes</title>
+    <title>SmartWallet - Expenses</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
     <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
@@ -44,7 +67,8 @@ require_once("config.php");
     </script>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200 antialiased min-h-screen">
+<body
+    class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200 antialiased min-h-screen">
 
     <!-- Mobile Overlay -->
     <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
@@ -116,7 +140,8 @@ require_once("config.php");
         <!-- Main Content -->
         <div class="flex-1 flex flex-col">
             <!-- Header with Hamburger -->
-            <header class="bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark p-4 sticky top-0 z-30 flex items-center justify-between">
+            <header
+                class="bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark p-4 sticky top-0 z-30 flex items-center justify-between">
                 <button id="open-sidebar" class="lg:hidden text-gray-700 dark:text-gray-300">
                     <span class="material-symbols-outlined text-2xl">menu</span>
                 </button>
@@ -130,20 +155,26 @@ require_once("config.php");
                     <button class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                         <span class="material-symbols-outlined">notifications</span>
                     </button>
-                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://intranet.youcode.ma/storage/users/profile/thumbnail/2050-1760996601.png");'></div>
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
+                        style='background-image: url("https://intranet.youcode.ma/storage/users/profile/thumbnail/2050-1760996601.png");'>
+                    </div>
                 </div>
             </header>
 
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-                <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark rounded-xl shadow-subtle overflow-hidden">
+                <button class="border-2 border-black w-[130px] place-self-center AddExpenses">add Expenses</button>
+
+                <div
+                    class="bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark rounded-xl shadow-subtle overflow-hidden">
                     <div class="p-6 border-b border-border-light dark:border-border-dark">
                         <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">All Expenses</h1>
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left">
-                            <thead class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                            <thead
+                                class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                                 <tr>
                                     <th class="px-6 py-4">ID</th>
                                     <th class="px-6 py-4">Amount</th>
@@ -152,7 +183,7 @@ require_once("config.php");
                                     <th class="px-6 py-4 text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-border-light dark:divide-border-dark">
+                            <!-- <tbody class="divide-y divide-border-light dark:divide-border-dark">
                                 <?php
                                 if ($result_incomes && $result_incomes->num_rows > 0) {
                                     while ($row = $result_incomes->fetch_assoc()) {
@@ -177,14 +208,75 @@ require_once("config.php");
                                     echo "<tr><td colspan='5' class='px-6 py-12 text-center text-gray-500 dark:text-gray-400'>No incomes found</td></tr>";
                                 }
                                 ?>
-                            </tbody>
+                            </tbody> -->
                         </table>
                     </div>
                 </div>
             </main>
         </div>
     </div>
+    <div id="ExpenseModal" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%;
+background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
 
+        <div style="background:#fff; padding:20px; width:300px; border-radius:8px;">
+            <h3>Add expense</h3>
+
+            <form action="traitement.php" method="POST">
+
+                <input type="number" name="montant_expenses" placeholder="Amount" style="width:100%; margin-bottom:10px;"
+                    required>
+
+                <!-- SELECT CATEGORY -->
+                <select name="cate_id" style="width:100%; margin-bottom:10px;" required>
+                    <option value="">Choisir une categorie</option>
+                    <?php
+                    while ($row = $cate_result->fetch_assoc()) {
+                        $cate_id = $row["id"];
+                        $cate_label = $row["cate"];
+                        echo "<option value='$cate_id'>$cate_label</option>";
+                    }
+                    ?>
+                </select>
+
+                <!-- SELECT BANK -->
+                <select name="card_id" style="width:100%; margin-bottom:10px;" required>
+                    <option value="">Choisir une banque</option>
+                    <?php
+                    while ($rows = $bank_name->fetch_assoc()) {
+                        $card_id = $rows["id"];
+                        $card_name = $rows["bank_name"];
+                        echo "<option value='$card_id'>$card_name</option>";
+                    }
+                    ?>
+                </select>
+
+                <button type="submit">Save</button>
+                <button type="button" id="closeModal">Cancel</button>
+
+            </form>
+        </div>
+
+    </div>
+    <script>
+        const btn = document.querySelector('.AddExpenses');
+        const modal = document.getElementById('ExpenseModal');
+        const closeBtn = document.getElementById('closeModal');
+
+        btn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        // باش تسد popup إلا ضغطتي برا
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
     <!-- Mobile Sidebar Toggle Script -->
     <script>
         const sidebar = document.getElementById('sidebar');
