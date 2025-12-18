@@ -17,12 +17,14 @@ if (isset($_POST['montant_incomes'])) {
     $stmt = $conn->prepare("SELECT balance FROM cards WHERE id = ?");
     $stmt->bind_param("i", $card_id);
     $stmt->execute();
-
+    
     $result = $stmt->get_result();
     $row_b = $result->fetch_assoc();
-
+    
     $balance = (float) $row_b['balance'] + $montant_incomes;
-    echo $balance;
+    $add_incomes = $conn->prepare("UPDATE cards SET balance = ? where id=?");
+    $add_incomes->bind_param("di", $balance , $card_id);
+    $add_incomes->execute();
     $stmt->close();
 
 }

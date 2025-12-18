@@ -13,11 +13,15 @@ $id = $_SESSION['id'];
 $bank_name = $conn->prepare("SELECT id ,bank_name FROM cards WHERE user_id = ?");
 $bank_name->bind_param("i", $id);
 $bank_name->execute();
-$bank_name = $bank_name->get_result(); 
-$incomes = $conn->prepare("SELECT i.id , i.montant ,  i.laDate ,i.descri , c.card_name , c.bank_name FROM incomes i LEFT JOIN cards c ON i.card_id = c.id WHERE i.user_id = ?;");
+$bank_name = $bank_name->get_result();
+$incomes = $conn->prepare("SELECT * FROM incomes i LEFT JOIN cards c ON i.card_id = c.id WHERE i.user_id = ?;");
 $incomes->bind_param("i", $id);
 $incomes->execute();
 $incomes = $incomes->get_result();
+$card_user = $conn->prepare("SELECT * FROM cards WHERE user_id = ?");
+$card_user->bind_param("i", $id);
+$card_user->execute();
+$card_user = $card_user->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -35,6 +39,60 @@ $incomes = $incomes->get_result();
     <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .modal-overlay {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .card-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+
+        .card-table thead tr {
+            background-color: #10b981;
+            color: white;
+            text-align: left;
+        }
+
+        .card-table th,
+        .card-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+        }
+
+        .card-table tbody tr {
+            border-bottom: 1px solid #ddd;
+        }
+
+        .card-table tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        .card-table tbody tr:hover {
+            background-color: #f3f4f6;
+            cursor: pointer;
+        }
+
+        .card-table .balance {
+            font-weight: bold;
+            color: #10b981;
+            text-align: right;
         }
     </style>
     <script id="tailwind-config">
@@ -157,6 +215,67 @@ $incomes = $incomes->get_result();
             </header>
 
             <button class="border-2 border-black w-[100px] place-self-center AddIncomes">add incomes</button>
+            <button class="border-2 border-black w-[100px] place-self-center AfficheCards">affiche cards</button>
+            <!-- Modal Overlay -->
+            <div class="modal-overlay hidden" id="cardModal">
+                <div class="modal-container bg-white rounded-xl p-4">
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h2>💳 Mes Cartes Bancaires</h2>
+                        <button class="btn-close" onclick="closeModal()">&times;</button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="modal-body">
+                        <table class="card-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom de la Carte</th>
+                                    <th>Nom de la Banque</th>
+                                    <th>Solde</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                while ($row = $card_user->fetch_assoc()) {
+                                    echo "<tr>
+                                                    <td>{$row['card_name']}</td>
+                                                    <td>{$row['bank_name']}</td>
+                                                    <td>{$row['balance']} MAD</td>
+                                        ";
+                                }
+                                ?>
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <a href="cards.php" class="btn-add">+ Ajouter une Carte</a href="cards.php">
+                        <button class="btn-cancel" onclick="closeModal()">Fermer</button>
+                    </div>
+                </div>
+            </div>
+            <script>
+                function openModal() {
+                    document.getElementById('cardModal').style.display = 'flex';
+                }
+
+                function closeModal() {
+                    document.getElementById('cardModal').style.display = 'none';
+                }
+
+                // Attach to button
+                document.querySelector('.AfficheCards').addEventListener('click', openModal);
+
+                // Close when clicking outside
+                document.getElementById('cardModal').addEventListener('click', function (e) {
+                    if (e.target === this) {
+                        closeModal();
+                    }
+                });
+            </script>
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
                 <div
@@ -182,7 +301,7 @@ $incomes = $incomes->get_result();
                                 if ($incomes && $incomes->num_rows > 0) {
                                     while ($row = $incomes->fetch_assoc()) {
                                         echo "<tr class='hover:bg-gray-50 dark:hover:bg-white/5 transition-colors'>
-                                            <td class='px-6 py-4 text-green-600 dark:text-green-400 font-semibold'>$" . number_format($row['montant'], 2) . "</td>
+                                            <td class='px-6 py-4 text-green-600 dark:text-green-400 font-semibold'>" . number_format($row['montant'], 2) . " MAD</td>
                                             <td class='px-6 py-4'>" . date("d M Y", strtotime($row['laDate'])) . "</td>
                                             <td class='px-6 py-4 max-w-xs truncate'>{$row['descri']}</td>                                          
                                             <td class='px-6 py-4 max-w-xs truncate'>{$row['card_name']}</td>
@@ -218,16 +337,18 @@ background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
             <h3>Add Income</h3>
 
             <form action="traitement.php" method="POST">
-                <input type="number" name="montant_incomes" placeholder="Amount" style="width:100%; margin-bottom:10px;" required>
+                <input type="number" name="montant_incomes" placeholder="Amount" style="width:100%; margin-bottom:10px;"
+                    required>
 
-                <input type="text" name="incomes_desc" placeholder="Description" style="width:100%; margin-bottom:10px;">
+                <input type="text" name="incomes_desc" placeholder="Description"
+                    style="width:100%; margin-bottom:10px;">
                 <select name="card_id" required>
                     <option value="">Choisir une banque</option>
-                    <?php while($row = $bank_name->fetch_assoc()){
+                    <?php while ($row = $bank_name->fetch_assoc()) {
                         $card_id = $row["id"];
                         $card_name = $row["bank_name"];
                         echo "<option value='$card_id'>$card_name</option>";
-                    }?>
+                    } ?>
                 </select>
                 <button type="submit">Save</button>
                 <button type="button" id="closeModal">Cancel</button>

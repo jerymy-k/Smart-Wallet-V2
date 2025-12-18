@@ -15,7 +15,7 @@ error_reporting(E_ALL);
             $stmt->bind_param("issdd", $id, $card_name, $bank_name, $initial_balance , $initial_balance );
             $stmt->execute();
             $stmt->close();
-            // header("Location: cards.php");
+            header("Location: index.php");
         }
     }
 ?>
