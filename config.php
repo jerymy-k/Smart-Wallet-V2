@@ -12,4 +12,18 @@ if ($conn->connect_error) {
 $result_incomes = $conn->query("SELECT * FROM incomes");
 $result_expenses = $conn->query("SELECT * FROM expenses");
 $auth = null;
+$expenseCategories = [
+    'Food',
+    'Transport',
+    'Rent',
+    'Electricity',
+    'Water',
+    'Internet',
+    'Phone',
+    'Fuel',
+    'Health',
+    'Education',
+    'Shopping'
+];
 ?>
+

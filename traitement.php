@@ -6,15 +6,15 @@ require_once('config.php');
 session_start();
 if (isset($_POST['montant_incomes'])) {
     $montant_incomes = (float) $_POST['montant_incomes'];
-    $incomes_desc = $_POST['incomes_desc'];
+    $cate_name = $_POST['cate_name'];
     $card_id = (int) $_POST['card_id'];
     $user_id = (int) $_SESSION['id'];
 
     $stmt = $conn->prepare("
-    INSERT INTO incomes (montant, descri, card_id, user_id)
+    INSERT INTO incomes (montant, cate_name, card_id, user_id)
     VALUES (?, ?, ?, ?)
     ");
-    $stmt->bind_param("dsii", $montant_incomes, $incomes_desc, $card_id, $user_id);
+    $stmt->bind_param("dsii", $montant_incomes, $cate_name, $card_id, $user_id);
     $stmt->execute();
     $stmt->close();
     $stmt = $conn->prepare("SELECT balance FROM cards WHERE id = ?");
@@ -29,13 +29,14 @@ if (isset($_POST['montant_incomes'])) {
     $add_incomes->bind_param("di", $balance, $card_id);
     $add_incomes->execute();
     $stmt->close();
-
+    header("Location: incomes.php");
 }
 
 if (isset($_POST['montant_expenses'])) {
     echo 'start exp';
     $montant_expenses = (float) $_POST['montant_expenses'];
     $categorie_id = $_POST['cate_id'];
+    echo $categorie_id;
     $card_id = $_POST['card_id'];
     $user_id = (int) $_SESSION['id'];
     $stmt = $conn->prepare('SELECT rest FROM categorie WHERE id = ?');
@@ -43,7 +44,7 @@ if (isset($_POST['montant_expenses'])) {
     $stmt->execute();
     $reslt = $stmt->get_result();
     $row_lt = $reslt->fetch_assoc();
-    if (($row_lt['rest'] - $montant_expenses) > 0) {
+    if (($row_lt['rest'] - $montant_expenses) >= 0) {
         echo 'enter condition';
         $stmt = $conn->prepare('INSERT INTO expenses(montant , cate_id , card_id , user_id) VALUES (?,?,?,?)');
         $stmt->bind_param('diii', $montant_expenses, $categorie_id, $card_id, $user_id);
@@ -61,9 +62,13 @@ if (isset($_POST['montant_expenses'])) {
         $stmt->close();
         $NewBalance->close();
         $NewRest = $row_lt['rest'] - $montant_expenses;
-        $stmt = $conn->prepare('UPDATE categorie ');
-        echo 'done';
-    }else{
+        $stmt = $conn->prepare('UPDATE categorie SET rest = ? WHERE id=?');
+        $stmt->bind_param('di', $NewRest, $categorie_id);
+        $stmt->execute();
+        $stmt->close();
+        echo'done';
+
+    } else {
         $stmt = $conn->prepare('SELECT cate FROM categorie WHERE id = ?');
         $stmt->bind_param('i', $categorie_id);
         $stmt->execute();
@@ -71,7 +76,7 @@ if (isset($_POST['montant_expenses'])) {
         $cate_name = $cate_name->fetch_assoc();
         $cate_name = $cate_name['cate'];
         $_SESSION['message_ereur'] = "U have reached the maximum limit in $cate_name";
-        header("Location: expenses.php");
+
     }
+    // header("Location: expenses.php");
 }
-// header("location: index.php");

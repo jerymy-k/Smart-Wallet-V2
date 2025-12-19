@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 require_once("config.php");
 session_start();
 if (isset($_SESSION['id'])) {
@@ -14,7 +17,7 @@ $bank_name = $conn->prepare("SELECT id ,bank_name FROM cards WHERE user_id = ?")
 $bank_name->bind_param("i", $id);
 $bank_name->execute();
 $bank_name = $bank_name->get_result();
-$incomes = $conn->prepare("SELECT * FROM incomes i LEFT JOIN cards c ON i.card_id = c.id WHERE i.user_id = ?;");
+$incomes = $conn->prepare("SELECT i.*, c.card_name, c.bank_name FROM incomes i LEFT JOIN cards c ON i.card_id = c.id WHERE i.user_id = ?");
 $incomes->bind_param("i", $id);
 $incomes->execute();
 $incomes = $incomes->get_result();
@@ -22,6 +25,10 @@ $card_user = $conn->prepare("SELECT * FROM cards WHERE user_id = ?");
 $card_user->bind_param("i", $id);
 $card_user->execute();
 $card_user = $card_user->get_result();
+
+$cate_inco = $conn->prepare("SELECT id, cate_name FROM cate_inco");
+$cate_inco->execute();
+$cate_inco = $cate_inco->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -39,60 +46,6 @@ $card_user = $card_user->get_result();
     <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        }
-
-        .modal-overlay {
-            display: none;
-            /* Hidden by default */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .card-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 16px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            background-color: white;
-        }
-
-        .card-table thead tr {
-            background-color: #10b981;
-            color: white;
-            text-align: left;
-        }
-
-        .card-table th,
-        .card-table td {
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-        }
-
-        .card-table tbody tr {
-            border-bottom: 1px solid #ddd;
-        }
-
-        .card-table tbody tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-
-        .card-table tbody tr:hover {
-            background-color: #f3f4f6;
-            cursor: pointer;
-        }
-
-        .card-table .balance {
-            font-weight: bold;
-            color: #10b981;
-            text-align: right;
         }
     </style>
     <script id="tailwind-config">
@@ -141,7 +94,6 @@ $card_user = $card_user->get_result();
                             <p class="text-gray-500 dark:text-gray-400 text-sm">Personal Finance</p>
                         </div>
                     </div>
-                    <!-- Close button only on mobile -->
                     <button id="close-sidebar" class="lg:hidden text-gray-600 dark:text-gray-400">
                         <span class="material-symbols-outlined">close</span>
                     </button>
@@ -153,12 +105,12 @@ $card_user = $card_user->get_result();
                         <span class="material-symbols-outlined">dashboard</span>
                         <p class="text-sm font-semibold">Dashboard</p>
                     </a>
-                    <a class="allincomes flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary transition-colors"
                         href="incomes.php">
                         <span class="material-symbols-outlined">account_balance_wallet</span>
-                        <p class="text-sm font-medium">Incomes</p>
+                        <p class="text-sm font-semibold">Incomes</p>
                     </a>
-                    <a class="allexpenses flex items-center gap-3 px-4 py-2.5 rounded-lg  hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         href="expenses.php">
                         <span class="material-symbols-outlined">receipt_long</span>
                         <p class="text-sm font-medium">Expenses</p>
@@ -214,70 +166,23 @@ $card_user = $card_user->get_result();
                 </div>
             </header>
 
-            <button class="border-2 border-black w-[100px] place-self-center AddIncomes">add incomes</button>
-            <button class="border-2 border-black w-[100px] place-self-center AfficheCards">affiche cards</button>
-            <!-- Modal Overlay -->
-            <div class="modal-overlay hidden" id="cardModal">
-                <div class="modal-container bg-white rounded-xl p-4">
-                    <!-- Modal Header -->
-                    <div class="modal-header">
-                        <h2>💳 Mes Cartes Bancaires</h2>
-                        <button class="btn-close" onclick="closeModal()">&times;</button>
-                    </div>
-
-                    <!-- Modal Body -->
-                    <div class="modal-body">
-                        <table class="card-table">
-                            <thead>
-                                <tr>
-                                    <th>Nom de la Carte</th>
-                                    <th>Nom de la Banque</th>
-                                    <th>Solde</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                while ($row = $card_user->fetch_assoc()) {
-                                    echo "<tr>
-                                                    <td>{$row['card_name']}</td>
-                                                    <td>{$row['bank_name']}</td>
-                                                    <td>{$row['balance']} MAD</td>
-                                        ";
-                                }
-                                ?>
-
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Modal Footer -->
-                    <div class="modal-footer">
-                        <a href="cards.php" class="btn-add">+ Ajouter une Carte</a href="cards.php">
-                        <button class="btn-cancel" onclick="closeModal()">Fermer</button>
-                    </div>
-                </div>
-            </div>
-            <script>
-                function openModal() {
-                    document.getElementById('cardModal').style.display = 'flex';
-                }
-
-                function closeModal() {
-                    document.getElementById('cardModal').style.display = 'none';
-                }
-
-                // Attach to button
-                document.querySelector('.AfficheCards').addEventListener('click', openModal);
-
-                // Close when clicking outside
-                document.getElementById('cardModal').addEventListener('click', function (e) {
-                    if (e.target === this) {
-                        closeModal();
-                    }
-                });
-            </script>
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <button
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-green-600 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl AddIncomes">
+                        <span class="material-symbols-outlined">add_circle</span>
+                        Add Income
+                    </button>
+                    <button
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl AfficheCards">
+                        <span class="material-symbols-outlined">credit_card</span>
+                        View Cards
+                    </button>
+                </div>
+
+                <!-- Incomes Table -->
                 <div
                     class="bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark rounded-xl shadow-subtle overflow-hidden">
                     <div class="p-6 border-b border-border-light dark:border-border-dark">
@@ -290,38 +195,53 @@ $card_user = $card_user->get_result();
                                 <tr>
                                     <th class="px-6 py-4">Amount</th>
                                     <th class="px-6 py-4">Date</th>
-                                    <th class="px-6 py-4">Description</th>
-                                    <th class="px-6 py-4">card name</th>
-                                    <th class="px-6 py-4">bank name</th>
+                                    <th class="px-6 py-4">Category</th>
+                                    <th class="px-6 py-4">Card Name</th>
+                                    <th class="px-6 py-4">Bank Name</th>
                                     <th class="px-6 py-4 text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border-light dark:divide-border-dark">
-                                <?php
-                                if ($incomes && $incomes->num_rows > 0) {
-                                    while ($row = $incomes->fetch_assoc()) {
-                                        echo "<tr class='hover:bg-gray-50 dark:hover:bg-white/5 transition-colors'>
-                                            <td class='px-6 py-4 text-green-600 dark:text-green-400 font-semibold'>" . number_format($row['montant'], 2) . " MAD</td>
-                                            <td class='px-6 py-4'>" . date("d M Y", strtotime($row['laDate'])) . "</td>
-                                            <td class='px-6 py-4 max-w-xs truncate'>{$row['descri']}</td>                                          
-                                            <td class='px-6 py-4 max-w-xs truncate'>{$row['card_name']}</td>
-                                            <td class='px-6 py-4 max-w-xs truncate'>{$row['bank_name']}</td>
+                                <?php if ($incomes && $incomes->num_rows > 0): ?>
+                                    <?php while ($row = $incomes->fetch_assoc()): ?>
+                                        <tr class='hover:bg-gray-50 dark:hover:bg-white/5 transition-colors'>
+                                            <td class='px-6 py-4 text-green-600 dark:text-green-400 font-semibold'>
+                                                <?php echo isset($row['montant']) ? number_format($row['montant'], 2) . ' MAD' : 'not defined'; ?>
+                                            </td>
+                                            <td class='px-6 py-4'>
+                                                <?php echo !empty($row['laDate']) ? date("d M Y", strtotime($row['laDate'])) : 'not defined'; ?>
+                                            </td>
+                                            <td class='px-6 py-4'>
+                                                <?php echo !empty($row['cate_name']) ? htmlspecialchars($row['cate_name']) : 'not defined'; ?>
+                                            </td>
+                                            <td class='px-6 py-4'>
+                                                <?php echo !empty($row['card_name']) ? htmlspecialchars($row['card_name']) : 'not defined'; ?>
+                                            </td>
+                                            <td class='px-6 py-4'>
+                                                <?php echo !empty($row['bank_name']) ? htmlspecialchars($row['bank_name']) : 'not defined'; ?>
+                                            </td>
                                             <td class='px-6 py-4 text-center'>
                                                 <div class='flex justify-center gap-3'>
-                                                    <a href='form_incomes_edit.php?id={$row['id']}' class='inline-flex items-center gap-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition'>
+                                                    <a href='form_incomes_edit.php?id=<?php echo $row['id']; ?>'
+                                                        class='inline-flex items-center gap-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition'>
                                                         <span class='material-symbols-outlined text-base'>edit</span> Edit
                                                     </a>
-                                                    <a href='delete_incomes.php?id={$row['id']}' onclick='return confirm(\"Are you sure you want to delete this income?\")' class='inline-flex items-center gap-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition'>
-                                                        <span class='material-symbols-outlined text-base'>delete</span> Delete
+                                                    <a href='delete_incomes.php?id=<?php echo $row['id']; ?>'
+                                                        onclick='return confirm("Are you sure you want to delete this income?")'
+                                                        class='inline-flex items-center gap-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition'>
+                                                        <span class='material-symbols-outlined text-base'>delete</span>
+                                                        Delete
                                                     </a>
                                                 </div>
                                             </td>
-                                        </tr>";
-                                    }
-                                } else {
-                                    echo "<tr><td colspan='5' class='px-6 py-12 text-center text-gray-500 dark:text-gray-400'>No incomes found</td></tr>";
-                                }
-                                ?>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan='6' class='px-6 py-12 text-center text-gray-500 dark:text-gray-400'>No
+                                            incomes found</td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -329,55 +249,269 @@ $card_user = $card_user->get_result();
             </main>
         </div>
     </div>
-    <!-- POPUP -->
-    <div id="incomeModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
 
-        <div style="background:#fff; padding:20px; width:300px; border-radius:8px;">
-            <h3>Add Income</h3>
+    <!-- Cards Modal -->
+    <div id="cardModal"
+        class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center backdrop-blur-sm">
+        <div
+            class="bg-card-light dark:bg-card-dark rounded-xl shadow-2xl w-full max-w-4xl mx-4 border border-border-light dark:border-border-dark overflow-hidden max-h-[90vh] flex flex-col">
 
-            <form action="traitement.php" method="POST">
-                <input type="number" name="montant_incomes" placeholder="Amount" style="width:100%; margin-bottom:10px;"
-                    required>
+            <!-- Modal Header -->
+            <div
+                class="bg-gradient-to-r from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 px-6 py-4 border-b border-border-light dark:border-border-dark">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-500/20 dark:bg-blue-500/30 rounded-full p-2">
+                            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-xl">credit_card</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">My Bank Cards</h2>
+                    </div>
+                    <button type="button" id="closeCardModalX"
+                        class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
 
-                <input type="text" name="incomes_desc" placeholder="Description"
-                    style="width:100%; margin-bottom:10px;">
-                <select name="card_id" required>
-                    <option value="">Choisir une banque</option>
-                    <?php while ($row = $bank_name->fetch_assoc()) {
-                        $card_id = $row["id"];
-                        $card_name = $row["bank_name"];
-                        echo "<option value='$card_id'>$card_name</option>";
-                    } ?>
-                </select>
-                <button type="submit">Save</button>
-                <button type="button" id="closeModal">Cancel</button>
+            <!-- Modal Body -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 text-left">Card Name</th>
+                                <th class="px-6 py-4 text-left">Bank Name</th>
+                                <th class="px-6 py-4 text-right">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border-light dark:divide-border-dark">
+                            <?php
+                            $card_user->data_seek(0);
+                            if ($card_user->num_rows > 0):
+                                while ($row = $card_user->fetch_assoc()):
+                                    ?>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                                            <?php echo !empty($row['card_name']) ? htmlspecialchars($row['card_name']) : 'not defined'; ?>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-700 dark:text-gray-300">
+                                            <?php echo !empty($row['bank_name']) ? htmlspecialchars($row['bank_name']) : 'not defined'; ?>
+                                        </td>
+                                        <td class="px-6 py-4 text-right font-semibold text-green-600 dark:text-green-400">
+                                            <?php echo isset($row['balance']) ? number_format($row['balance'], 2) . ' MAD' : 'not defined'; ?>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="3" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                        No cards found
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex gap-3 justify-end">
+                    <a href="cards.php"
+                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-green-600 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl">
+                        <span class="material-symbols-outlined text-base">add</span>
+                        Add Card
+                    </a>
+                    <button type="button" id="closeCardModal"
+                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-base">close</span>
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Income Modal -->
+    <div id="incomeModal"
+        class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center backdrop-blur-sm">
+        <div
+            class="bg-card-light dark:bg-card-dark rounded-xl shadow-2xl w-full max-w-md mx-4 border border-border-light dark:border-border-dark overflow-hidden">
+
+            <!-- Modal Header -->
+            <div
+                class="bg-gradient-to-r from-primary/10 to-green-500/10 dark:from-primary/20 dark:to-green-500/20 px-6 py-4 border-b border-border-light dark:border-border-dark">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-primary/20 dark:bg-primary/30 rounded-full p-2">
+                            <span class="material-symbols-outlined text-primary text-xl">account_balance_wallet</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Add New Income</h3>
+                    </div>
+                    <button type="button" id="closeIncomeModalX"
+                        class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <form action="traitement.php" method="POST" class="p-6 space-y-5">
+
+                <!-- Amount Input -->
+                <div class="space-y-2">
+                    <label for="montant_incomes"
+                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <span class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">payments</span>
+                            Amount
+                        </span>
+                    </label>
+                    <div class="relative">
+                        <span
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-semibold">MAD</span>
+                        <input type="number" id="montant_incomes" name="montant_incomes" placeholder="0.00" step="0.01"
+                            min="0"
+                            class="w-full pl-16 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+                            required>
+                    </div>
+                </div>
+
+                <!-- Bank Select -->
+                <div class="space-y-2">
+                    <label for="card_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <span class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">account_balance</span>
+                            Bank Account
+                        </span>
+                    </label>
+                    <select name="card_id" id="card_id"
+                        class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white transition-all appearance-none cursor-pointer"
+                        required>
+                        <option value="" class="text-gray-500">Select a bank</option>
+                        <?php
+                        $bank_name->data_seek(0);
+                        while ($row = $bank_name->fetch_assoc()) {
+                            $card_id = $row["id"];
+                            $card_name = htmlspecialchars($row["bank_name"]);
+                            echo "<option value='$card_id'>$card_name</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Category Select -->
+                <div class="space-y-2">
+                    <label for="cate_name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <span class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">category</span>
+                            Category
+                        </span>
+                    </label>
+                    <select name="cate_name" id="cate_name"
+                        class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white transition-all appearance-none cursor-pointer"
+                        required>
+                        <option value="" class="text-gray-500">Select a category</option>
+                        <?php
+                        $cate_inco->data_seek(0);
+                        while ($row = $cate_inco->fetch_assoc()) {
+                            $cate_label = htmlspecialchars($row["cate_name"]);
+                            echo "<option value='$cate_label'>$cate_label</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-4">
+                    <button type="submit"
+                        class="flex-1 bg-primary hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-xl">check_circle</span>
+                        Save Income
+                    </button>
+                    <button type="button" id="closeIncomeModal"
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-3 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-xl">cancel</span>
+                        Cancel
+                    </button>
+                </div>
             </form>
         </div>
-
     </div>
-    <!-- Mobile Sidebar Toggle Script -->
+
+    <!-- Scripts -->
     <script>
-        const btn = document.querySelector('.AddIncomes');
-        const modal = document.getElementById('incomeModal');
-        const closeBtn = document.getElementById('closeModal');
+        // Income Modal
+        const btnIncome = document.querySelector('.AddIncomes');
+        const modalIncome = document.getElementById('incomeModal');
+        const closeBtnIncome = document.getElementById('closeIncomeModal');
+        const closeBtnIncomeX = document.getElementById('closeIncomeModalX');
 
-        btn.addEventListener('click', () => {
-            modal.style.display = 'flex';
+        btnIncome.addEventListener('click', () => {
+            modalIncome.classList.remove('hidden');
+            modalIncome.classList.add('flex');
         });
 
-        closeBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
+        closeBtnIncome.addEventListener('click', () => {
+            modalIncome.classList.add('hidden');
+            modalIncome.classList.remove('flex');
         });
 
-        // باش تسد popup إلا ضغطتي برا
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
+        closeBtnIncomeX.addEventListener('click', () => {
+            modalIncome.classList.add('hidden');
+            modalIncome.classList.remove('flex');
+        });
+
+        modalIncome.addEventListener('click', (e) => {
+            if (e.target === modalIncome) {
+                modalIncome.classList.add('hidden');
+                modalIncome.classList.remove('flex');
             }
         });
-    </script>
-    <script>
+
+        // Card Modal
+        const btnCard = document.querySelector('.AfficheCards');
+        const modalCard = document.getElementById('cardModal');
+        const closeBtnCard = document.getElementById('closeCardModal');
+        const closeBtnCardX = document.getElementById('closeCardModalX');
+
+        btnCard.addEventListener('click', () => {
+            modalCard.classList.remove('hidden');
+            modalCard.classList.add('flex');
+        });
+
+        closeBtnCard.addEventListener('click', () => {
+            modalCard.classList.add('hidden');
+            modalCard.classList.remove('flex');
+        });
+
+        closeBtnCardX.addEventListener('click', () => {
+            modalCard.classList.add('hidden');
+            modalCard.classList.remove('flex');
+        });
+
+        modalCard.addEventListener('click', (e) => {
+            if (e.target === modalCard) {
+                modalCard.classList.add('hidden');
+                modalCard.classList.remove('flex');
+            }
+        });
+
+        // Escape key to close modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (!modalIncome.classList.contains('hidden')) {
+                    modalIncome.classList.add('hidden');
+                    modalIncome.classList.remove('flex');
+                }
+                if (!modalCard.classList.contains('hidden')) {
+                    modalCard.classList.add('hidden');
+                    modalCard.classList.remove('flex');
+                }
+            }
+        });
+
+        // Sidebar Toggle
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('mobile-overlay');
         const openBtn = document.getElementById('open-sidebar');
@@ -398,7 +532,6 @@ background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
             overlay.classList.add('hidden');
         });
 
-        // Optional: Close sidebar when clicking a link on mobile
         document.querySelectorAll('#sidebar a').forEach(link => {
             link.addEventListener('click', () => {
                 if (window.innerWidth < 1024) {
@@ -407,7 +540,6 @@ background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
                 }
             });
         });
-
     </script>
 </body>
 

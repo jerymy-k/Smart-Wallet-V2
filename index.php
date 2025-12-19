@@ -1,5 +1,9 @@
 <?php
-require_once("config.php");
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require "config.php";
 session_set_cookie_params(0);
 session_start();
 if (isset($_SESSION['id'])) {
@@ -127,7 +131,7 @@ while ($row = $resultExpenses->fetch_assoc()) {
                         <p class="text-sm font-medium">Expenses</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="#">
+                        href="categories.php">
                         <span class="material-symbols-outlined">category</span>
                         <p class="text-sm font-medium">Categories</p>
                     </a>
@@ -240,42 +244,7 @@ while ($row = $resultExpenses->fetch_assoc()) {
                 </div>
 
                 <!-- Chart + Transactions -->
-                <div class="mt-6 md:mt-8 grid grid-cols-1 xl:grid-cols-5 gap-6 md:gap-8">
-                    <div
-                        class="xl:col-span-3 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark rounded-xl shadow-subtle p-4 md:p-6">
-                        <canvas id="myChart"></canvas>
-                    </div>
-
-                    <div
-                        class="p-4 md:p-5 xl:col-span-2 bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark rounded-xl shadow-subtle flex flex-col gap-4">
-                        <p class="text-gray-500 dark:text-gray-400 text-base md:text-lg font-medium text-center">Last
-                            Transactions</p>
-                        <?php
-                        $mounth = date("m");
-                        $sql = "SELECT montant, laDate, descri, 'incomes' as source FROM incomes WHERE MONTH(laDate) = $mounth
-                                UNION
-                                SELECT montant, laDate, descri, 'expenses' as source FROM expenses WHERE MONTH(laDate) = $mounth
-                                ORDER BY laDate DESC LIMIT 5";
-                        $inco_expe = $conn->query($sql);
-                        while ($row = $inco_expe->fetch_assoc()) {
-                            $color = $row['source'] == 'incomes' ? 'text-green-500' : 'text-red-500';
-                            $img = $row['source'] == 'incomes'
-                                ? 'https://media.istockphoto.com/id/1144366258/fr/vectoriel/flèche-verte-pointant-vers-le-haut-le-symbole-de-direction-icône-de-signe-flèche.webp?s=2048x2048&w=is&k=20&c=vSOuyB3sdkxiWCGgBoSBdkVFUtzGbsQX1EuZNy_09js='
-                                : 'https://media.istockphoto.com/id/1144366180/fr/vectoriel/flèche-rouge-pointant-vers-le-haut-le-symbole-de-direction-icône-de-signe-flèche.webp?s=2048x2048&w=is&k=20&c=U995t8Ta6XreKdkRnvbGCz6jsdIV_6bpx2AA1WN9yac=';
-                            $rotate = $row['source'] == 'expenses' ? 'rotate-180' : '';
-                            $converted = date("d-M", strtotime($row['laDate']));
-                            echo "<div class='w-full border-2 flex py-2 rounded-lg p-2 justify-between items-center gap-2'>
-                                    <div class='flex gap-2 items-center min-w-0'>
-                                        <img class='rounded-full h-8 md:h-10 w-8 md:w-10 flex-shrink-0 $rotate' src='$img'>
-                                        <p class='text-black/50 dark:text-gray-400 text-xs md:text-sm truncate'>{$row['descri']}<br><span class='text-xs'>$converted</span></p>
-                                    </div>
-                                    <p class='$color font-semibold text-sm md:text-base flex-shrink-0'>$" . $row['montant'] . "</p>
-                                    </div>";
-                        }
-                        ?>
-                        <a href="#" class="self-center text-primary text-sm hover:underline">view all transactions</a>
-                    </div>
-                </div>
+                
             </main>
         </div>
     </div>
