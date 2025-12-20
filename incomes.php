@@ -106,9 +106,10 @@ $cate_inco = $cate_inco->get_result();
                         <p class="text-sm font-semibold">Dashboard</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary transition-colors"
+
                         href="incomes.php">
                         <span class="material-symbols-outlined">account_balance_wallet</span>
-                        <p class="text-sm font-semibold">Incomes</p>
+                        <p class="text-sm font-medium">Incomes</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         href="expenses.php">
@@ -116,9 +117,14 @@ $cate_inco = $cate_inco->get_result();
                         <p class="text-sm font-medium">Expenses</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="#">
+                        href="categories.php">
                         <span class="material-symbols-outlined">category</span>
                         <p class="text-sm font-medium">Categories</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="cards.php">
+                        <span class="material-symbols-outlined">credit_card</span>
+                        <p class="text-sm font-medium">Cards</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         href="#">
@@ -134,7 +140,7 @@ $cate_inco = $cate_inco->get_result();
                         <p class="text-sm font-medium">Settings</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="#">
+                        href="logout.php">
                         <span class="material-symbols-outlined">logout</span>
                         <p class="text-sm font-medium">Logout</p>
                     </a>
@@ -174,11 +180,6 @@ $cate_inco = $cate_inco->get_result();
                         class="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-green-600 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl AddIncomes">
                         <span class="material-symbols-outlined">add_circle</span>
                         Add Income
-                    </button>
-                    <button
-                        class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl AfficheCards">
-                        <span class="material-symbols-outlined">credit_card</span>
-                        View Cards
                     </button>
                 </div>
 
@@ -247,88 +248,6 @@ $cate_inco = $cate_inco->get_result();
                     </div>
                 </div>
             </main>
-        </div>
-    </div>
-
-    <!-- Cards Modal -->
-    <div id="cardModal"
-        class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center backdrop-blur-sm">
-        <div
-            class="bg-card-light dark:bg-card-dark rounded-xl shadow-2xl w-full max-w-4xl mx-4 border border-border-light dark:border-border-dark overflow-hidden max-h-[90vh] flex flex-col">
-
-            <!-- Modal Header -->
-            <div
-                class="bg-gradient-to-r from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 px-6 py-4 border-b border-border-light dark:border-border-dark">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-blue-500/20 dark:bg-blue-500/30 rounded-full p-2">
-                            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-xl">credit_card</span>
-                        </div>
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">My Bank Cards</h2>
-                    </div>
-                    <button type="button" id="closeCardModalX"
-                        class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
-                        <span class="material-symbols-outlined">close</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="flex-1 overflow-y-auto p-6">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4 text-left">Card Name</th>
-                                <th class="px-6 py-4 text-left">Bank Name</th>
-                                <th class="px-6 py-4 text-right">Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-border-light dark:divide-border-dark">
-                            <?php
-                            $card_user->data_seek(0);
-                            if ($card_user->num_rows > 0):
-                                while ($row = $card_user->fetch_assoc()):
-                                    ?>
-                                    <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                            <?php echo !empty($row['card_name']) ? htmlspecialchars($row['card_name']) : 'not defined'; ?>
-                                        </td>
-                                        <td class="px-6 py-4 text-gray-700 dark:text-gray-300">
-                                            <?php echo !empty($row['bank_name']) ? htmlspecialchars($row['bank_name']) : 'not defined'; ?>
-                                        </td>
-                                        <td class="px-6 py-4 text-right font-semibold text-green-600 dark:text-green-400">
-                                            <?php echo isset($row['balance']) ? number_format($row['balance'], 2) . ' MAD' : 'not defined'; ?>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="3" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                                        No cards found
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="px-6 py-4 border-t border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50">
-                <div class="flex gap-3 justify-end">
-                    <a href="cards.php"
-                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-green-600 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl">
-                        <span class="material-symbols-outlined text-base">add</span>
-                        Add Card
-                    </a>
-                    <button type="button" id="closeCardModal"
-                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-all">
-                        <span class="material-symbols-outlined text-base">close</span>
-                        Close
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -466,34 +385,6 @@ $cate_inco = $cate_inco->get_result();
             if (e.target === modalIncome) {
                 modalIncome.classList.add('hidden');
                 modalIncome.classList.remove('flex');
-            }
-        });
-
-        // Card Modal
-        const btnCard = document.querySelector('.AfficheCards');
-        const modalCard = document.getElementById('cardModal');
-        const closeBtnCard = document.getElementById('closeCardModal');
-        const closeBtnCardX = document.getElementById('closeCardModalX');
-
-        btnCard.addEventListener('click', () => {
-            modalCard.classList.remove('hidden');
-            modalCard.classList.add('flex');
-        });
-
-        closeBtnCard.addEventListener('click', () => {
-            modalCard.classList.add('hidden');
-            modalCard.classList.remove('flex');
-        });
-
-        closeBtnCardX.addEventListener('click', () => {
-            modalCard.classList.add('hidden');
-            modalCard.classList.remove('flex');
-        });
-
-        modalCard.addEventListener('click', (e) => {
-            if (e.target === modalCard) {
-                modalCard.classList.add('hidden');
-                modalCard.classList.remove('flex');
             }
         });
 

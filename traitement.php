@@ -36,14 +36,21 @@ if (isset($_POST['montant_expenses'])) {
     echo 'start exp';
     $montant_expenses = (float) $_POST['montant_expenses'];
     $categorie_id = $_POST['cate_id'];
-    echo $categorie_id;
     $card_id = $_POST['card_id'];
     $user_id = (int) $_SESSION['id'];
-    $stmt = $conn->prepare('SELECT rest FROM categorie WHERE id = ?');
+    $stmt = $conn->prepare('SELECT cate ,limite , rest FROM categorie WHERE id = ?');
     $stmt->bind_param('i', $categorie_id);
     $stmt->execute();
     $reslt = $stmt->get_result();
     $row_lt = $reslt->fetch_assoc();
+    $limite = (int)$row_lt['limite'] ;
+    echo $limite ;
+    if (!$limite) {
+        $cate = $row_lt['cate'];
+        $_SESSION['message_ereur'] = "You need to set a limite to $cate";
+        header("Location: expenses.php");
+        exit();
+    }
     if (($row_lt['rest'] - $montant_expenses) >= 0) {
         echo 'enter condition';
         $stmt = $conn->prepare('INSERT INTO expenses(montant , cate_id , card_id , user_id) VALUES (?,?,?,?)');
@@ -66,7 +73,7 @@ if (isset($_POST['montant_expenses'])) {
         $stmt->bind_param('di', $NewRest, $categorie_id);
         $stmt->execute();
         $stmt->close();
-        echo'done';
+        echo 'done';
 
     } else {
         $stmt = $conn->prepare('SELECT cate FROM categorie WHERE id = ?');

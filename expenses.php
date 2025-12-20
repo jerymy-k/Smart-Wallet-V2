@@ -29,7 +29,7 @@ $cate_result = $cate_result->get_result();
 // Fetch expense categories for the modal
 $expenseCategories = [];
 while ($row = $cate_result->fetch_assoc()) {
-    $expenseCategories[] = $row['cate'];
+    $expenseCategories[] = $row; // keep id and cate
 }
 
 // Fetch Expenses
@@ -107,7 +107,6 @@ $result_expenses = $expenses_query->get_result();
                             <p class="text-gray-500 dark:text-gray-400 text-sm">Personal Finance</p>
                         </div>
                     </div>
-                    <!-- Close button only on mobile -->
                     <button id="close-sidebar" class="lg:hidden text-gray-600 dark:text-gray-400">
                         <span class="material-symbols-outlined">close</span>
                     </button>
@@ -119,20 +118,25 @@ $result_expenses = $expenses_query->get_result();
                         <span class="material-symbols-outlined">dashboard</span>
                         <p class="text-sm font-semibold">Dashboard</p>
                     </a>
-                    <a class="allincomes flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         href="incomes.php">
                         <span class="material-symbols-outlined">account_balance_wallet</span>
                         <p class="text-sm font-medium">Incomes</p>
                     </a>
-                    <a class="allexpenses flex items-center gap-3 px-4 py-2.5 rounded-lg  hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary transition-colors"
                         href="expenses.php">
                         <span class="material-symbols-outlined">receipt_long</span>
                         <p class="text-sm font-medium">Expenses</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="#">
+                        href="categories.php">
                         <span class="material-symbols-outlined">category</span>
                         <p class="text-sm font-medium">Categories</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="cards.php">
+                        <span class="material-symbols-outlined">credit_card</span>
+                        <p class="text-sm font-medium">Cards</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         href="#">
@@ -148,7 +152,7 @@ $result_expenses = $expenses_query->get_result();
                         <p class="text-sm font-medium">Settings</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="#">
+                        href="logout.php">
                         <span class="material-symbols-outlined">logout</span>
                         <p class="text-sm font-medium">Logout</p>
                     </a>
@@ -181,11 +185,13 @@ $result_expenses = $expenses_query->get_result();
             </header>
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-                <button
-                    class="mb-4 px-6 py-2 bg-primary hover:bg-green-600 text-white font-semibold rounded-lg transition-colors AddExpenses">
-                    Add Expense
-                </button>
-
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <button
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 AddExpenses text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl AddIncomes">
+                        <span class="material-symbols-outlined">remove</span>
+                        Add expense
+                    </button>
+                </div>
                 <?php if (isset($_SESSION['message_ereur'])): ?>
                     <div
                         class="mb-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg">
@@ -207,7 +213,6 @@ $result_expenses = $expenses_query->get_result();
                             <thead
                                 class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-6 py-4">ID</th>
                                     <th class="px-6 py-4">Amount</th>
                                     <th class="px-6 py-4">Date</th>
                                     <th class="px-6 py-4">Category</th>
@@ -219,9 +224,6 @@ $result_expenses = $expenses_query->get_result();
                                 <?php if ($result_expenses && $result_expenses->num_rows > 0): ?>
                                     <?php while ($row = $result_expenses->fetch_assoc()): ?>
                                         <tr class='hover:bg-gray-50 dark:hover:bg-white/5 transition-colors'>
-                                            <td class='px-6 py-4 font-medium'>
-                                                <?php echo $row['id'] ?? 'not defined'; ?>
-                                            </td>
                                             <td class='px-6 py-4 text-red-600 dark:text-red-400 font-semibold'>
                                                 <?php echo isset($row['montant']) ? '$' . number_format($row['montant'], 2) : 'not defined'; ?>
                                             </td>
@@ -269,11 +271,11 @@ $result_expenses = $expenses_query->get_result();
 
             <!-- Modal Header -->
             <div
-                class="bg-gradient-to-r from-primary/10 to-green-500/10 dark:from-primary/20 dark:to-green-500/20 px-6 py-4 border-b border-border-light dark:border-border-dark">
+                class="bg-gradient-to-r from-red-400/10 to-red-500/20 dark:from-warning/20 dark:to-red-500/20 px-6 py-4 border-b border-border-light dark:border-border-dark">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="bg-primary/20 dark:bg-primary/30 rounded-full p-2">
-                            <span class="material-symbols-outlined text-primary text-xl">receipt_long</span>
+                        <div class="bg-red-500/20 dark:bg-primary/30 rounded-full p-2">
+                            <span class="material-symbols-outlined text-red-500 text-xl">receipt_long</span>
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 dark:text-white">Add New Expense</h3>
                     </div>
@@ -318,8 +320,10 @@ $result_expenses = $expenses_query->get_result();
                         required>
                         <option value="" class="text-gray-500">Select a category</option>
                         <?php
-                        foreach ($expenseCategories as $ec) {
-                            echo "<option value='" .  . "'>" . htmlspecialchars($ec) . "</option>";
+                        foreach ($expenseCategories as $cat) {
+                            $cat_id = $cat['id'];
+                            $cat_name = htmlspecialchars($cat['cate']);
+                            echo "<option value='$cat_id'>$cat_name</option>";
                         }
                         ?>
                     </select>
@@ -352,7 +356,7 @@ $result_expenses = $expenses_query->get_result();
                 <!-- Action Buttons -->
                 <div class="flex gap-3 pt-4">
                     <button type="submit"
-                        class="flex-1 bg-primary hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                        class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
                         <span class="material-symbols-outlined text-xl">check_circle</span>
                         Save Expense
                     </button>
