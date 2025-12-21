@@ -14,7 +14,8 @@ if (!$auth['stat']) {
     header("location: authentication.php");
 }
 $id = $_SESSION['id'];
-
+$reslt = $conn->query("SELECT stat, FullName, email FROM userinfo WHERE id = $id");
+$user_info = $reslt->fetch_assoc();
 // Banks
 $bank_name = $conn->prepare("SELECT id, bank_name FROM cards WHERE user_id = ?");
 $bank_name->bind_param("i", $id);
@@ -22,7 +23,7 @@ $bank_name->execute();
 $bank_name = $bank_name->get_result();
 
 // Categories
-$cate_result = $conn->prepare("SELECT id, cate FROM categorie");
+$cate_result = $conn->prepare("SELECT id, cate FROM categorie WHERE user_id = $id");
 $cate_result->execute();
 $cate_result = $cate_result->get_result();
 
@@ -116,7 +117,7 @@ $result_expenses = $expenses_query->get_result();
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         href="index.php">
                         <span class="material-symbols-outlined">dashboard</span>
-                        <p class="text-sm font-semibold">Dashboard</p>
+                        <p class="text-sm font-medium">Dashboard</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         href="incomes.php">
@@ -124,24 +125,24 @@ $result_expenses = $expenses_query->get_result();
                         <p class="text-sm font-medium">Incomes</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary transition-colors"
-                        href="expenses.php">
-                        <span class="material-symbols-outlined">receipt_long</span>
-                        <p class="text-sm font-medium">Expenses</p>
+                    href="expenses.php">
+                    <span class="material-symbols-outlined">receipt_long</span>
+                    <p class="text-sm font-medium">Expenses</p>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                href="categories.php">
+                <span class="material-symbols-outlined">category</span>
+                <p class="text-sm font-medium">Categories</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="categories.php">
-                        <span class="material-symbols-outlined">category</span>
-                        <p class="text-sm font-medium">Categories</p>
-                    </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="cards.php">
-                        <span class="material-symbols-outlined">credit_card</span>
-                        <p class="text-sm font-medium">Cards</p>
-                    </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="#">
-                        <span class="material-symbols-outlined">ios_share</span>
-                        <p class="text-sm font-medium">Export</p>
+                    href="cards.php">
+                    <span class="material-symbols-outlined">credit_card</span>
+                    <p class="text-sm font-medium">Cards</p>
+                </a>
+                <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="transferts.php">
+                        <span class="material-symbols-outlined">send_money</span>
+                        <p class="text-sm font-semibold">Transfers</p>
                     </a>
                 </nav>
 
@@ -160,26 +161,28 @@ $result_expenses = $expenses_query->get_result();
             </div>
         </aside>
 
+
         <!-- Main Content -->
         <div class="flex-1 flex flex-col">
             <!-- Header with Hamburger -->
             <header
-                class="bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark p-4 sticky top-0 z-30 flex items-center justify-between">
-                <button id="open-sidebar" class="lg:hidden text-gray-700 dark:text-gray-300">
-                    <span class="material-symbols-outlined text-2xl">menu</span>
-                </button>
+                class="bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark p-4 flex items-center justify-between">
+                <button id="open-sidebar" class="lg:hidden"><span class="material-symbols-outlined">menu</span></button>
 
                 <div>
-                    <h2 class="text-gray-900 dark:text-white text-xl md:text-2xl font-bold">Expenses List</h2>
-                    <p class="text-gray-500 dark:text-gray-400 text-xs md:text-sm">Manage all your expense entries</p>
+                    <h2 class="text-gray-900 dark:text-white text-xl font-bold">Dashboard</h2>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <button class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                        <span class="material-symbols-outlined">notifications</span>
-                    </button>
-                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-                        style='background-image: url("https://intranet.youcode.ma/storage/users/profile/thumbnail/2050-1760996601.png");'>
+                <div class="flex items-center gap-3">
+                    <div class="hidden md:block text-right">
+                        <p class="text-sm font-bold text-gray-900 dark:text-white">
+                            <?php echo htmlspecialchars($user_info['FullName']); ?>
+                        </p>
+                        <p class="text-xs text-gray-500"><?php echo htmlspecialchars($user_info['email']); ?></p>
+                    </div>
+                    <div
+                        class="bg-primary/20 text-primary rounded-full size-10 flex items-center justify-center font-bold border border-primary/30">
+                        <?php echo strtoupper(substr($user_info['FullName'], 0, 1)); ?>
                     </div>
                 </div>
             </header>

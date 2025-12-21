@@ -16,6 +16,8 @@ if (!$auth['stat']) {
 }
 
 $id = $_SESSION['id'];
+$reslt = $conn->query("SELECT stat, FullName, email FROM userinfo WHERE id = $id");
+$user_info = $reslt->fetch_assoc();
 $card_user = $conn->prepare("SELECT * FROM cards WHERE user_id = ?");
 $card_user->bind_param("i", $id);
 $card_user->execute();
@@ -73,13 +75,11 @@ $card_user = $card_user->get_result();
     <div class="flex h-screen">
 
         <!-- Sidebar -->
-        <aside id="sidebar"
-            class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card-light dark:bg-card-dark border-r border-border-light dark:border-border-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card-light dark:bg-card-dark border-r border-border-light dark:border-border-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
             <div class="flex flex-col flex-grow p-4">
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-3">
-                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-14"
-                            style="background-image:url('img/SmartWallet.png')"></div>
+                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-14" style="background-image:url('img/SmartWallet.png')"></div>
                         <div>
                             <h1 class="text-gray-900 dark:text-white text-base font-bold">SmartWallet</h1>
                             <p class="text-gray-500 dark:text-gray-400 text-sm">Personal Finance</p>
@@ -91,46 +91,38 @@ $card_user = $card_user->get_result();
                 </div>
 
                 <nav class="flex flex-col gap-2 flex-grow">
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="index.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="index.php">
                         <span class="material-symbols-outlined">dashboard</span>
                         <p class="text-sm font-medium">Dashboard</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="incomes.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="incomes.php">
                         <span class="material-symbols-outlined">account_balance_wallet</span>
                         <p class="text-sm font-medium">Incomes</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="expenses.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="expenses.php">
                         <span class="material-symbols-outlined">receipt_long</span>
                         <p class="text-sm font-medium">Expenses</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="categories.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="categories.php">
                         <span class="material-symbols-outlined">category</span>
                         <p class="text-sm font-medium">Categories</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary transition-colors"
-                        href="cards.php">
+                                        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary transition-colors" href="cards.php">
                         <span class="material-symbols-outlined">credit_card</span>
-                        <p class="text-sm font-semibold">Cards</p>
+                        <p class="text-sm font-medium">Cards</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="#">
-                        <span class="material-symbols-outlined">ios_share</span>
-                        <p class="text-sm font-medium">Export</p>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="transferts.php">
+                        <span class="material-symbols-outlined">send_money</span>
+                        <p class="text-sm font-semibold">Transfers</p>
                     </a>
                 </nav>
 
                 <div class="flex flex-col gap-2 pt-4 border-t border-border-light dark:border-border-dark">
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="#">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="#">
                         <span class="material-symbols-outlined">settings</span>
                         <p class="text-sm font-medium">Settings</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="#">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="logout.php">
                         <span class="material-symbols-outlined">logout</span>
                         <p class="text-sm font-medium">Logout</p>
                     </a>
@@ -138,27 +130,28 @@ $card_user = $card_user->get_result();
             </div>
         </aside>
 
+
         <!-- Main Content -->
         <div class="flex-1 flex flex-col">
             <!-- Header -->
             <header
-                class="bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark p-4 sticky top-0 z-30 flex items-center justify-between">
-                <button id="open-sidebar" class="lg:hidden text-gray-700 dark:text-gray-300">
-                    <span class="material-symbols-outlined text-2xl">menu</span>
-                </button>
+                class="bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark p-4 flex items-center justify-between">
+                <button id="open-sidebar" class="lg:hidden"><span class="material-symbols-outlined">menu</span></button>
 
                 <div>
-                    <h2 class="text-gray-900 dark:text-white text-xl md:text-2xl font-bold">Bank Cards</h2>
-                    <p class="text-gray-500 dark:text-gray-400 text-xs md:text-sm">Manage your payment cards and
-                        balances</p>
+                    <h2 class="text-gray-900 dark:text-white text-xl font-bold">Dashboard</h2>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <button class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                        <span class="material-symbols-outlined">notifications</span>
-                    </button>
-                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-                        style='background-image: url("https://intranet.youcode.ma/storage/users/profile/thumbnail/2050-1760996601.png");'>
+                <div class="flex items-center gap-3">
+                    <div class="hidden md:block text-right">
+                        <p class="text-sm font-bold text-gray-900 dark:text-white">
+                            <?php echo htmlspecialchars($user_info['FullName']); ?>
+                        </p>
+                        <p class="text-xs text-gray-500"><?php echo htmlspecialchars($user_info['email']); ?></p>
+                    </div>
+                    <div
+                        class="bg-primary/20 text-primary rounded-full size-10 flex items-center justify-center font-bold border border-primary/30">
+                        <?php echo strtoupper(substr($user_info['FullName'], 0, 1)); ?>
                     </div>
                 </div>
             </header>
@@ -182,15 +175,26 @@ $card_user = $card_user->get_result();
                             $balance = $row['balance'] ?? 0;
                             $card_name = !empty($row['card_name']) ? htmlspecialchars($row['card_name']) : 'Unnamed Card';
                             $bank_name = !empty($row['bank_name']) ? htmlspecialchars($row['bank_name']) : 'Unknown Bank';
+                            $is_principal = $row['principal'] == 1;
                             ?>
                             <div
-                                class="bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-900 rounded-xl p-6 shadow-subtle hover:shadow-subtle-hover transition-all text-white">
+                                class="bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-900 rounded-xl p-6 shadow-subtle hover:shadow-subtle-hover transition-all text-white relative">
+
+                                <!-- Principal Badge -->
+                                <?php if ($is_principal): ?>
+                                    <div
+                                        class="absolute top-2 right-4 bg-yellow-400 text-yellow-900 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
+                                        <span class="material-symbols-outlined text-base">star</span>
+                                        Principal
+                                    </div>
+                                <?php endif; ?>
+
                                 <div class="flex justify-between items-start mb-8">
                                     <div>
                                         <p class="text-blue-100 text-sm mb-1">Card Name</p>
                                         <h3 class="text-xl font-bold"><?php echo $card_name; ?></h3>
                                     </div>
-                                    <span class="material-symbols-outlined text-3xl opacity-80">credit_card</span>
+                                    <span class="material-symbols-outlined text-3xl opacity-80 pt-[20px]">credit_card</span>
                                 </div>
 
                                 <div class="mb-6">
@@ -206,6 +210,19 @@ $card_user = $card_user->get_result();
                                         </p>
                                     </div>
                                     <div class="flex gap-2">
+                                        <?php if (!$is_principal): ?>
+                                            <!-- Set Principal Button -->
+                                            <form method="POST" action="set_principal_card.php" style="display:inline;">
+                                                <input type="hidden" name="card_id" value="<?php echo $row['id']; ?>">
+                                                <button type="submit" name="set_principal"
+                                                    onclick="return confirm('Set this card as your principal card?')"
+                                                    class="p-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 rounded-lg transition-colors"
+                                                    title="Set as principal card">
+                                                    <span class="material-symbols-outlined text-sm">star</span>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+
                                         <a href="edit_card.php?id=<?php echo $row['id']; ?>"
                                             class="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
                                             <span class="material-symbols-outlined text-sm">edit</span>
@@ -218,6 +235,7 @@ $card_user = $card_user->get_result();
                                     </div>
                                 </div>
                             </div>
+
                         <?php endwhile; ?>
                     <?php else: ?>
                         <div class="col-span-full">

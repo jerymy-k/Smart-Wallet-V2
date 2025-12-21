@@ -16,7 +16,8 @@ if (!$auth['stat']) {
 }
 
 $user_id = $_SESSION['id'];
-
+$reslt = $conn->query("SELECT stat, FullName, email FROM userinfo WHERE id = $user_id");
+$user_info = $reslt->fetch_assoc();
 // Fetch all category limits
 $limits_query = $conn->prepare("SELECT id, cate, limite, rest, IsActive FROM categorie WHERE user_id=?");
 $limits_query->bind_param("i", $user_id);
@@ -24,25 +25,55 @@ $limits_query->execute();
 $limits = $limits_query->get_result();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $newstat = $_POST["IsActive"];
-    $id_cat = $_POST["id_cat"];
+    $newstat = (int)$_POST["IsActive"];
+    $id_cat  = (int)$_POST["id_cat"];
+
+    // 1️⃣ Get category limit
     $stmt = $conn->prepare("SELECT limite FROM categorie WHERE id = ?");
     $stmt->bind_param("i", $id_cat);
     $stmt->execute();
-    $limite_res = $stmt->get_result();
+    $limite_res = $stmt->get_result()->fetch_assoc();
     $stmt->close();
-    $limite_res = $limite_res->fetch_assoc();
-    if ($limite_res["limite"] == 0 && $newstat != 0) {
-        $_SESSION['ereur_active'] = 'You cannot activate this category. Please set a limit first.';
-    } else {
-        $stmt = $conn->prepare("UPDATE categorie SET IsActive = ? WHERE id = ?");
-        $stmt->bind_param("ii", $newstat, $id_cat);
+
+    // 2️⃣ If trying to ENABLE
+    if ($newstat === 1) {
+
+        // ❌ No limit
+        if ($limite_res["limite"] == 0) {
+            $_SESSION['ereur_active'] = 'You cannot activate this category. Please set a limit first.';
+            header("Location: categories.php");
+            exit;
+        }
+
+        // ❌ No principal card
+        $stmt = $conn->prepare("
+            SELECT id 
+            FROM cards 
+            WHERE user_id = ? AND principal = 1
+            LIMIT 1
+        ");
+        $stmt->bind_param("i", $user_id);
         $stmt->execute();
+        $hasPrincipal = $stmt->get_result()->num_rows;
         $stmt->close();
-        header("Location: categories.php");
-        exit;
+
+        if ($hasPrincipal == 0) {
+            $_SESSION['ereur_active'] = 'You must set a principal card before enabling categories.';
+            header("Location: categories.php");
+            exit;
+        }
     }
+
+    // 3️⃣ Update status
+    $stmt = $conn->prepare("UPDATE categorie SET IsActive = ? WHERE id = ?");
+    $stmt->bind_param("ii", $newstat, $id_cat);
+    $stmt->execute();
+    $stmt->close();
+
+    header("Location: categories.php");
+    exit;
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -116,7 +147,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         href="index.php">
                         <span class="material-symbols-outlined">dashboard</span>
-                        <p class="text-sm font-semibold">Dashboard</p>
+                        <p class="text-sm font-medium">Dashboard</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         href="incomes.php">
@@ -139,9 +170,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <p class="text-sm font-medium">Cards</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                        href="#">
-                        <span class="material-symbols-outlined">ios_share</span>
-                        <p class="text-sm font-medium">Export</p>
+                        href="transferts.php">
+                        <span class="material-symbols-outlined">send_money</span>
+                        <p class="text-sm font-semibold">Transfers</p>
                     </a>
                 </nav>
 
@@ -160,25 +191,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         </aside>
 
+
         <!-- Main Content -->
         <div class="flex-1 flex flex-col">
             <!-- Header -->
             <header
-                class="bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark p-4 sticky top-0 z-30 flex items-center justify-between">
-                <button id="open-sidebar" class="lg:hidden text-gray-700 dark:text-gray-300">
-                    <span class="material-symbols-outlined text-2xl">menu</span>
-                </button>
+                class="bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark p-4 flex items-center justify-between">
+                <button id="open-sidebar" class="lg:hidden"><span class="material-symbols-outlined">menu</span></button>
+
                 <div>
-                    <h2 class="text-gray-900 dark:text-white text-xl md:text-2xl font-bold">Category Limits</h2>
-                    <p class="text-gray-500 dark:text-gray-400 text-xs md:text-sm">Manage monthly spending limits per
-                        category</p>
+                    <h2 class="text-gray-900 dark:text-white text-xl font-bold">Dashboard</h2>
                 </div>
-                <div class="flex items-center gap-4">
-                    <button class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                        <span class="material-symbols-outlined">notifications</span>
-                    </button>
-                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
-                        style='background-image: url("https://intranet.youcode.ma/storage/users/profile/thumbnail/2050-1760996601.png");'>
+
+                <div class="flex items-center gap-3">
+                    <div class="hidden md:block text-right">
+                        <p class="text-sm font-bold text-gray-900 dark:text-white">
+                            <?php echo htmlspecialchars($user_info['FullName']); ?>
+                        </p>
+                        <p class="text-xs text-gray-500"><?php echo htmlspecialchars($user_info['email']); ?></p>
+                    </div>
+                    <div
+                        class="bg-primary/20 text-primary rounded-full size-10 flex items-center justify-center font-bold border border-primary/30">
+                        <?php echo strtoupper(substr($user_info['FullName'], 0, 1)); ?>
                     </div>
                 </div>
             </header>

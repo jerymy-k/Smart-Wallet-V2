@@ -5,6 +5,7 @@ error_reporting(E_ALL);
 require_once('config.php');
 session_start();
 $ereur = '';
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $ereur = '';
@@ -59,12 +60,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $stmt = $conn->query($sql);
 
-        $_SESSION['success'] = 'Account created successfully';
+        // Store user ID in session to complete card setup
+        $_SESSION['pending_user_id'] = $id;
+        $_SESSION['pending_user_name'] = $FullName;
+        $_SESSION['success'] = 'Account created! Please add your first card to complete signup.';
+        
+        header("location: add_first_card.php");
+        exit();
 
     } else {
         $_SESSION['ereur'] = $ereur;
         $_SESSION['fullname'] = $FullName;
         $_SESSION['email'] = $email;
+        header("location: authentication.php");
+        exit();
     }
 }
 header("location: authentication.php");
