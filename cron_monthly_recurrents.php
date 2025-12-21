@@ -1,58 +1,108 @@
 <?php
 require_once("config.php");
 
-// Ne faire que le 1er du mois
-if ((int)date('j') !== 1) {
-  exit;
-}
+// run only on day 1
+if ((int)date('j') !== 1) exit;
 
-$today = date('Y-m-d');
-$currentMonth = date('Y-m'); // ex: 2025-12
+$now = date('Y-m-d H:i:s');
+$monthStart = date('Y-m-01 00:00:00'); // first day of this month
 
-// Récurrents actifs qui n'ont pas encore été générés ce mois
-$sql = "
+// Recurrents not executed this month
+$stmt = $conn->prepare("
   SELECT id, user_id, card_id, type, title, category_id, amount, last_run
   FROM monthly_recurrents
   WHERE is_active = 1
-    AND (last_run IS NULL OR DATE_FORMAT(last_run, '%Y-%m') <> ?)
-";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $currentMonth);
+    AND (last_run IS NULL OR last_run < ?)
+");
+$stmt->bind_param("s", $monthStart);
 $stmt->execute();
 $res = $stmt->get_result();
 $stmt->close();
 
 while ($r = $res->fetch_assoc()) {
+
+  $rid = (int)$r['id'];
   $user_id = (int)$r['user_id'];
   $card_id = (int)$r['card_id'];
-  $category_id = $r['category_id'] !== null ? (int)$r['category_id'] : null;
   $amount = (float)$r['amount'];
-  $title = $r['title'];
-  $rid = (int)$r['id'];
+  $title = (string)$r['title'];
+  $cate_id = ($r['category_id'] !== null && $r['category_id'] !== '') ? (int)$r['category_id'] : null;
 
-  // ⚠️ ADAPTE ces INSERT à tes vraies tables/colonnes !
-  // Exemple simple : tables incomes / expenses : (user_id, card_id, category_id, amount, label, date)
-  if ($r['type'] === 'income') {
-    $ins = $conn->prepare("
-      INSERT INTO incomes (user_id, card_id, category_id, amount, label, date)
-      VALUES (?, ?, ?, ?, ?, ?)
-    ");
-    $ins->bind_param("iiidss", $user_id, $card_id, $category_id, $amount, $title, $today);
-    $ins->execute();
-    $ins->close();
-  } else {
-    $ins = $conn->prepare("
-      INSERT INTO expenses (user_id, card_id, category_id, amount, label, date)
-      VALUES (?, ?, ?, ?, ?, ?)
-    ");
-    $ins->bind_param("iiidss", $user_id, $card_id, $category_id, $amount, $title, $today);
-    $ins->execute();
-    $ins->close();
+  if ($amount <= 0) continue;
+
+  // 1) Get card balance (and ensure card belongs to user)
+  $c = $conn->prepare("SELECT balance FROM cards WHERE id=? AND user_id=? LIMIT 1");
+  $c->bind_param("ii", $card_id, $user_id);
+  $c->execute();
+  $card = $c->get_result()->fetch_assoc();
+  $c->close();
+
+  if (!$card) continue;
+
+  $balance = (float)$card['balance'];
+
+  // 2) If expense: check balance first
+  if ($r['type'] === 'expense' && $balance < $amount) {
+    // not enough money -> skip and DO NOT update last_run
+    continue;
   }
 
-  // Marquer comme généré ce mois
-  $up = $conn->prepare("UPDATE monthly_recurrents SET last_run=? WHERE id=?");
-  $up->bind_param("si", $today, $rid);
-  $up->execute();
-  $up->close();
+  $ok = false;
+
+  // 3) Insert transaction in correct table/columns
+  if ($r['type'] === 'income') {
+
+    // incomes: montant, cate_name, card_id, user_id (laDate auto)
+    $ins = $conn->prepare("
+      INSERT INTO incomes (montant, cate_name, card_id, user_id)
+      VALUES (?, ?, ?, ?)
+    ");
+    $ins->bind_param("dsii", $amount, $title, $card_id, $user_id);
+    $ok = $ins->execute();
+    $ins->close();
+
+    // update card balance (+)
+    if ($ok) {
+      $upBal = $conn->prepare("UPDATE cards SET balance = balance + ? WHERE id=? AND user_id=?");
+      $upBal->bind_param("dii", $amount, $card_id, $user_id);
+      $ok = $upBal->execute();
+      $upBal->close();
+    }
+
+  } else {
+
+    // expenses: montant, cate_id (nullable), card_id, user_id (laDate auto)
+    if ($cate_id !== null) {
+      $ins = $conn->prepare("
+        INSERT INTO expenses (montant, cate_id, card_id, user_id)
+        VALUES (?, ?, ?, ?)
+      ");
+      $ins->bind_param("diii", $amount, $cate_id, $card_id, $user_id);
+    } else {
+      $ins = $conn->prepare("
+        INSERT INTO expenses (montant, card_id, user_id)
+        VALUES (?, ?, ?)
+      ");
+      $ins->bind_param("dii", $amount, $card_id, $user_id);
+    }
+
+    $ok = $ins->execute();
+    $ins->close();
+
+    // update card balance (-)
+    if ($ok) {
+      $upBal = $conn->prepare("UPDATE cards SET balance = balance - ? WHERE id=? AND user_id=?");
+      $upBal->bind_param("dii", $amount, $card_id, $user_id);
+      $ok = $upBal->execute();
+      $upBal->close();
+    }
+  }
+
+  // 4) Update last_run ONLY if everything worked
+  if ($ok) {
+    $up = $conn->prepare("UPDATE monthly_recurrents SET last_run=? WHERE id=? AND user_id=?");
+    $up->bind_param("sii", $now, $rid, $user_id);
+    $up->execute();
+    $up->close();
+  }
 }

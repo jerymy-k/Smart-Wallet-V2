@@ -37,5 +37,5 @@ $stmt->execute();
 $stmt->close();
 
 $_SESSION['rec_msg'] = "Transaction récurrente ajoutée.";
-header("Location: recurrents.php.php");
+header("Location: recurrents.php");
 exit;
