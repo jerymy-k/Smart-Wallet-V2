@@ -6,23 +6,24 @@ require_once('config.php');
 require 'user_ip.php';
 require 'otp.php';
 session_start();
-$id = $_SESSION["id"];
+$id = $_SESSION["id"]; // the id of the user try to log in
 $stmt = $conn->prepare("SELECT FullName , email , code_exp , otp FROM userinfo WHERE id=?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $resulta = $stmt->get_result();
 $row = $resulta->fetch_assoc();
-$code_exp = $row["code_exp"];
-$otp = $row["otp"];
-$email = $row['email'];
-$name = $row['FullName'];
-$ip = getUserIP();
-$now = date("Y-m-d H:i:s");
-sendNewIPNotification($email ,$name , $ip , $now);
+$code_exp = $row["code_exp"]; // time to code expire
+$otp = $row["otp"]; // otp code
+$email = $row['email']; // email of the user 
+$name = $row['FullName']; 
+$P_login_ip = getUserIP(); // the ip of the one who try to log in
+$now = date("Y-m-d H:i:s"); // current time
+// if he comes from the link in the email
 if (isset($_GET["otp"])) {
     $get_otp = $_GET["otp"];
-}
-if(isset($_GET['resend'])){
+} 
+// if he resend the code 
+if (isset($_GET['resend'])) {
     $date_exp = date("Y-m-d H:i:s", strtotime("+5 minutes"));
     $act_str = rand(100000, 999999);
     $stmt = $conn->prepare("UPDATE userinfo SET  code_exp = ? , otp = ? WHERE id = ?");
@@ -31,6 +32,7 @@ if(isset($_GET['resend'])){
     $stmt->close();
     mailsender($email, $act_str);
 }
+// cheaking the input if correct or not
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     $OTP = $_POST["otp"];
     if ($otp == $OTP && $code_exp > date("Y-m-d H:i:s")) {
@@ -38,8 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $stmt = $conn->prepare("UPDATE userinfo SET stat = ? , code_exp = NULL , otp = NULL WHERE id = ?");
         $stmt->bind_param("ii", $stat, $id);
         $stmt->execute();
-        $conn->query("INSERT INTO user_ip(ip , user_id) VALUES ('$ip' , $id)");
-        $stmt->close();
+        $conn->query("INSERT INTO user_ip(ip , user_id) VALUES ('$P_login_ip' , $id)");
+        $stmt->close(); 
+        sendNewIPNotification($email, $name, $ip, $now);
+
         header("Location: index.php");
     } else {
         echo "<script>alert('otp wrong')</script>";
@@ -134,7 +138,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 </script>
             <?php endif; ?>
             <div class="mt-4 text-center">
-                <a href="http://smartwallet.local/verify_otp.php?resend=true" class="text-sm text-primary-green hover:underline">Resend Code</a>
+                <a href="http://smartwallet.local/verify_otp.php?resend=true"
+                    class="text-sm text-primary-green hover:underline">Resend Code</a>
             </div>
         </div>
 

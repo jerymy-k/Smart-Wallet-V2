@@ -15,7 +15,7 @@ if ($result_email_pass->num_rows > 0) {
     if (password_verify($password, $row["Passw"])) {
         $id = $row['id'];
         $_SESSION["id"] = $id;
-        $ip_user = $conn->query("SELECT ip , user_id FROM user_ip WHERE user_id=$id");
+        $ip_user = $conn->query( "SELECT ip , user_id FROM user_ip WHERE user_id=$id");
         $ip = getUserIP();
         while($row = $ip_user->fetch_assoc()){
             if($row['ip'] == $ip){
@@ -39,5 +39,5 @@ if ($result_email_pass->num_rows > 0) {
         exit();
     }
 }
-header('location: authentication.php');
+header('Location: authentication.php');
 ?>

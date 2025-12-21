@@ -32,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($ereur == '') {
 
-        // insert user
         $hach_pass = password_hash($password, PASSWORD_DEFAULT);
 
         $stmt = $conn->prepare(
@@ -41,43 +40,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->bind_param("sss", $FullName, $email, $hach_pass);
         $stmt->execute();
 
-        // get last inserted id
-        $user_id = $conn->insert_id;
+        $id = $conn->insert_id;
 
-        // insert default expense categories
         $sql = "
             INSERT INTO categorie (cate, user_id) VALUES
-            ('Food', ?),
-            ('Transport', ?),
-            ('Rent', ?),
-            ('Electricity', ?),
-            ('Water', ?),
-            ('Internet', ?),
-            ('Phone', ?),
-            ('Fuel', ?),
-            ('Health', ?),
-            ('Education', ?),
-            ('Shopping', ?)
+            ('Food', $id),
+            ('Transport', $id),
+            ('Rent', $id),
+            ('Electricity', $id),
+            ('Water', $id),
+            ('Internet', $id),
+            ('Phone', $id),
+            ('Fuel', $id),
+            ('Health', $id),
+            ('Education', $id),
+            ('Shopping', $id)
         ";
 
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param(
-            "iiiiiiiiiii",
-            $user_id,
-            $user_id,
-            $user_id,
-            $user_id,
-            $user_id,
-            $user_id,
-            $user_id,
-            $user_id,
-            $user_id,
-            $user_id,
-            $user_id
-        );
-        $stmt->execute();
+        $stmt = $conn->query($sql);
 
-        // success
         $_SESSION['success'] = 'Account created successfully';
 
     } else {
