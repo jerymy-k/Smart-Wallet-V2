@@ -1,6 +1,7 @@
 <?php
 require_once("config.php");
 session_start();
+
 $sql = "SELECT * FROM userinfo;";
 $result_auth = $conn->query($sql);
 $email = [];
@@ -9,8 +10,14 @@ while ($row = $result_auth->fetch_assoc()) {
     $email[] = $row["Email"];
     $pass[] = $row["Passw"];
 }
+
+// Signup error (already used by your UI)
 $ereur = $_SESSION["ereur"] ?? "";
 unset($_SESSION["ereur"]);
+
+// Login error (new)
+$login_error = $_SESSION["login_error"] ?? "";
+unset($_SESSION["login_error"]);
 ?>
 
 <!DOCTYPE html>
@@ -68,17 +75,17 @@ unset($_SESSION["ereur"]);
             <p class="text-sm text-gray-500 dark:text-gray-400">Personal Finance Manager</p>
         </div>
 
-        <!-- Tabs: Login / Sign Up -->
+        <!-- Tabs -->
         <div
             class="bg-card-light dark:bg-card-dark rounded-2xl shadow-subtle border border-border-light dark:border-border-dark overflow-hidden">
             <div class="flex">
                 <button type="button"
-                    class="<?= empty($ereur) ? 'text-gray-900 dark:text-white' : 'text-gray-500'; ?> tab-btn flex-1 py-4 text-center font-semibold text-lg transition-colors"
+                    class="<?= (empty($ereur) ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'); ?> tab-btn flex-1 py-4 text-center font-semibold text-lg transition-colors"
                     data-target="login">
                     Login
                 </button>
                 <button type="button"
-                    class="<?= !empty($ereur) ? 'text-gray-900 dark:text-white' : 'text-gray-500'; ?> tab-btn flex-1 py-4 text-center font-semibold text-lg transition-colors  dark:text-gray-400"
+                    class="<?= (!empty($ereur) ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'); ?> tab-btn flex-1 py-4 text-center font-semibold text-lg transition-colors"
                     data-target="signup">
                     Sign Up
                 </button>
@@ -87,73 +94,92 @@ unset($_SESSION["ereur"]);
             <div class="p-8">
 
                 <!-- Login Form -->
-                <form id="login" class="space-y-6 tab-content <?= !empty($ereur) ? 'hidden ' : ''; ?>  "
+                <form id="login"
+                    class="space-y-6 tab-content <?= (!empty($ereur) ? 'hidden' : ''); ?>"
                     action="login_traitement.php" method="POST">
+
                     <div>
                         <label class="block text-sm font-medium mb-2">Email</label>
                         <input type="email" name="email" required placeholder="you@example.com"
                             class="w-full px-4 py-3 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
                     </div>
+
                     <div>
                         <label class="block text-sm font-medium mb-2">Password</label>
                         <input type="password" name="password" required placeholder="••••••••"
                             class="w-full px-4 py-3 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
                     </div>
+
                     <button type="submit"
                         class="w-full py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition transform hover:scale-[1.02]">
                         Login
                     </button>
-                    <div class="ereur_login">
 
-                    </div>
+                    <?php if (!empty($login_error)): ?>
+                        <div class="p-3 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 flex items-center gap-2">
+                            <span class="material-symbols-outlined">error</span>
+                            <p class="text-sm font-semibold"><?php echo htmlspecialchars($login_error); ?></p>
+                        </div>
+                    <?php endif; ?>
                 </form>
+
                 <!-- Sign Up Form -->
                 <form id="signup"
-                    class="space-y-6 tab-content <?= empty($ereur) ? 'hidden' : 'text-gray-900 dark:text-white '; ?> "
+                    class="space-y-6 tab-content <?= (empty($ereur) ? 'hidden' : ''); ?>"
                     action="authen_trait.php" method="POST">
+
                     <div>
                         <label class="block text-sm font-medium mb-2">Full Name</label>
-                        <input type="text" name="name" required placeholder="John Doe" value="<?php
-                        if (isset($_SESSION['fullname'])) {
-                            echo $_SESSION['fullname'];
-                            unset($_SESSION['fullname']);
-                        }
-                        ?>" class=" w-full px-4 py-3 rounded-lg border border-border-light dark:border-border-dark
-                            bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary
-                            focus:border-transparent outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Email</label>
-                        <input type="email" name="email" required placeholder="you@example.com" value="<?php
-                        if (isset($_SESSION['email'])) {
-                            echo $_SESSION['email'];
-                            unset($_SESSION['email']);
-                        }
-                        ?>"
+                        <input type="text" name="name" required placeholder="John Doe"
+                            value="<?php
+                            if (isset($_SESSION['fullname'])) {
+                                echo htmlspecialchars($_SESSION['fullname']);
+                                unset($_SESSION['fullname']);
+                            }
+                            ?>"
                             class="w-full px-4 py-3 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
                     </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Email</label>
+                        <input type="email" name="email" required placeholder="you@example.com"
+                            value="<?php
+                            if (isset($_SESSION['email'])) {
+                                echo htmlspecialchars($_SESSION['email']);
+                                unset($_SESSION['email']);
+                            }
+                            ?>"
+                            class="w-full px-4 py-3 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                    </div>
+
                     <div>
                         <label class="block text-sm font-medium mb-2">Password</label>
                         <input type="password" name="password" required placeholder="••••••••"
                             class="w-full px-4 py-3 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
                     </div>
+
                     <div>
-                        <label class="block text-sm font-medium mb-2">confirme Password</label>
+                        <label class="block text-sm font-medium mb-2">Confirm Password</label>
                         <input type="password" name="confirme_password" required placeholder="••••••••"
                             class="w-full px-4 py-3 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
                     </div>
+
                     <button type="submit"
                         class="w-full py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition transform hover:scale-[1.02]">
                         Create Account
                     </button>
-                    <div>
-                        <p class="text-red-600 text-center"><?php echo $ereur ?></p>
-                    </div>
+
+                    <?php if (!empty($ereur)): ?>
+                        <div class="p-3 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 flex items-center gap-2">
+                            <span class="material-symbols-outlined">error</span>
+                            <p class="text-sm font-semibold"><?php echo htmlspecialchars($ereur); ?></p>
+                        </div>
+                    <?php endif; ?>
                 </form>
             </div>
         </div>
 
-        <!-- Dark mode toggle (optional) -->
+        <!-- Dark mode toggle -->
         <div class="mt-8 text-center">
             <button onclick="document.documentElement.classList.toggle('dark')"
                 class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition">
@@ -166,22 +192,18 @@ unset($_SESSION["ereur"]);
         // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                // Remove active from all
                 document.querySelectorAll('.tab-btn').forEach(b => {
                     b.classList.remove('text-gray-900', 'dark:text-white');
                     b.classList.add('text-gray-500', 'dark:text-gray-400');
                 });
-                // Add active to clicked
+
                 btn.classList.remove('text-gray-500', 'dark:text-gray-400');
                 btn.classList.add('text-gray-900', 'dark:text-white');
 
-                // Hide all forms
                 document.querySelectorAll('.tab-content').forEach(form => form.classList.add('hidden'));
-                // Show target form
                 document.getElementById(btn.dataset.target).classList.remove('hidden');
             });
         });
     </script>
 </body>
-
 </html>

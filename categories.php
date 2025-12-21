@@ -2,78 +2,35 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
 require_once("config.php");
 session_start();
 
-if (isset($_SESSION['id'])) {
-    $id = $_SESSION['id'];
-    $reslt = $conn->query("SELECT stat FROM userinfo WHERE id = $id");
-    $auth = $reslt->fetch_assoc();
+if (!isset($_SESSION['id'])) {
+    header("location: login.php");
+    exit;
 }
-if (!$auth['stat']) {
+
+$user_id = (int)$_SESSION['id'];
+
+// Auth check
+$reslt = $conn->query("SELECT stat FROM userinfo WHERE id = $user_id");
+$auth = $reslt ? $reslt->fetch_assoc() : null;
+
+if (!$auth || !$auth['stat']) {
     header("location: authentication.php");
     exit;
 }
 
-$user_id = $_SESSION['id'];
+// User info
 $reslt = $conn->query("SELECT stat, FullName, email FROM userinfo WHERE id = $user_id");
-$user_info = $reslt->fetch_assoc();
-// Fetch all category limits
-$limits_query = $conn->prepare("SELECT id, cate, limite, rest, IsActive FROM categorie WHERE user_id=?");
+$user_info = $reslt ? $reslt->fetch_assoc() : ['FullName' => 'User', 'email' => ''];
+
+// Fetch all category limits (NO IsActive anymore)
+$limits_query = $conn->prepare("SELECT id, cate, limite, rest FROM categorie WHERE user_id=?");
 $limits_query->bind_param("i", $user_id);
 $limits_query->execute();
 $limits = $limits_query->get_result();
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $newstat = (int)$_POST["IsActive"];
-    $id_cat  = (int)$_POST["id_cat"];
-
-    // 1️⃣ Get category limit
-    $stmt = $conn->prepare("SELECT limite FROM categorie WHERE id = ?");
-    $stmt->bind_param("i", $id_cat);
-    $stmt->execute();
-    $limite_res = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    // 2️⃣ If trying to ENABLE
-    if ($newstat === 1) {
-
-        // ❌ No limit
-        if ($limite_res["limite"] == 0) {
-            $_SESSION['ereur_active'] = 'You cannot activate this category. Please set a limit first.';
-            header("Location: categories.php");
-            exit;
-        }
-
-        // ❌ No principal card
-        $stmt = $conn->prepare("
-            SELECT id 
-            FROM cards 
-            WHERE user_id = ? AND principal = 1
-            LIMIT 1
-        ");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $hasPrincipal = $stmt->get_result()->num_rows;
-        $stmt->close();
-
-        if ($hasPrincipal == 0) {
-            $_SESSION['ereur_active'] = 'You must set a principal card before enabling categories.';
-            header("Location: categories.php");
-            exit;
-        }
-    }
-
-    // 3️⃣ Update status
-    $stmt = $conn->prepare("UPDATE categorie SET IsActive = ? WHERE id = ?");
-    $stmt->bind_param("ii", $newstat, $id_cat);
-    $stmt->execute();
-    $stmt->close();
-
-    header("Location: categories.php");
-    exit;
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -118,8 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </script>
 </head>
 
-<body
-    class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200 antialiased min-h-screen">
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200 antialiased min-h-screen">
 
     <!-- Mobile Overlay -->
     <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
@@ -174,6 +130,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <span class="material-symbols-outlined">send_money</span>
                         <p class="text-sm font-semibold">Transfers</p>
                     </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="recurrents.php">
+                        <span class="material-symbols-outlined">repeat</span>
+                        <p class="text-sm font-medium">Recurrents</p>
+                    </a>
                 </nav>
 
                 <div class="flex flex-col gap-2 pt-4 border-t border-border-light dark:border-border-dark">
@@ -191,12 +152,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         </aside>
 
-
         <!-- Main Content -->
         <div class="flex-1 flex flex-col">
             <!-- Header -->
-            <header
-                class="bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark p-4 flex items-center justify-between">
+            <header class="bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark p-4 flex items-center justify-between">
                 <button id="open-sidebar" class="lg:hidden"><span class="material-symbols-outlined">menu</span></button>
 
                 <div>
@@ -210,8 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </p>
                         <p class="text-xs text-gray-500"><?php echo htmlspecialchars($user_info['email']); ?></p>
                     </div>
-                    <div
-                        class="bg-primary/20 text-primary rounded-full size-10 flex items-center justify-center font-bold border border-primary/30">
+                    <div class="bg-primary/20 text-primary rounded-full size-10 flex items-center justify-center font-bold border border-primary/30">
                         <?php echo strtoupper(substr($user_info['FullName'], 0, 1)); ?>
                     </div>
                 </div>
@@ -219,41 +177,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-                <!-- Error Message -->
-                <?php if (isset($_SESSION['ereur_active'])): ?>
-                    <div
-                        class="mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg flex items-center gap-3">
-                        <span class="material-symbols-outlined">error</span>
-                        <p><?php echo $_SESSION['ereur_active'];
-                        unset($_SESSION['ereur_active']); ?></p>
-                    </div>
-                <?php endif; ?>
 
                 <!-- Info Card -->
-                <div
-                    class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <div class="flex items-start gap-3">
                         <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">info</span>
                         <div>
                             <h3 class="font-semibold text-blue-900 dark:text-blue-300 mb-1">How it works</h3>
-                            <p class="text-sm text-blue-700 dark:text-blue-400">Click on any limit amount to edit it.
-                                Enable/disable categories to control spending tracking. Categories must have a limit set
-                                before they can be enabled.</p>
+                            <p class="text-sm text-blue-700 dark:text-blue-400">
+                                Click on any limit amount to edit it. Categories do not have enable/disable anymore.
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Table Card -->
-                <div
-                    class="bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark rounded-xl shadow-subtle overflow-hidden">
+                <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark rounded-xl shadow-subtle overflow-hidden">
                     <div class="p-6 border-b border-border-light dark:border-border-dark">
-                        <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Category Spending
-                            Limits</h1>
+                        <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                            Category Spending Limits
+                        </h1>
                     </div>
+
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left">
-                            <thead
-                                class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                            <thead class="bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                                 <tr>
                                     <th class="px-6 py-4">ID</th>
                                     <th class="px-6 py-4">Category</th>
@@ -265,28 +213,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </th>
                                     <th class="px-6 py-4">
                                         <div class="flex items-center gap-2">
-                                            <span
-                                                class="material-symbols-outlined text-base">account_balance_wallet</span>
+                                            <span class="material-symbols-outlined text-base">account_balance_wallet</span>
                                             Remaining (MAD)
                                         </div>
                                     </th>
-                                    <th class="px-6 py-4">Status</th>
                                 </tr>
                             </thead>
+
                             <tbody class="divide-y divide-border-light dark:divide-border-dark">
                                 <?php if ($limits && $limits->num_rows > 0): ?>
                                     <?php while ($row = $limits->fetch_assoc()): ?>
                                         <?php
-                                        $stat = $row['IsActive'] ?? 0;
-                                        $id_Cat = $row['id'] ?? 0;
-                                        $limite = $row['limite'] ?? 0;
-                                        $rest = $row['rest'] ?? 0;
+                                        $id_Cat = (int)($row['id'] ?? 0);
+                                        $limite = (float)($row['limite'] ?? 0);
+                                        $rest = (float)($row['rest'] ?? 0);
                                         $percentage = $limite > 0 ? (($limite - $rest) / $limite) * 100 : 0;
                                         ?>
                                         <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                                             <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                                 <?php echo $row['id'] ?? 'not defined'; ?>
                                             </td>
+
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center gap-2">
                                                     <span class="material-symbols-outlined text-primary">label</span>
@@ -295,6 +242,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                     </span>
                                                 </div>
                                             </td>
+
                                             <td class="px-6 py-4">
                                                 <button
                                                     class="limit-cell group flex items-center gap-2 text-orange-600 dark:text-orange-400 font-semibold hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
@@ -302,15 +250,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                     data-limit="<?php echo $row['limite'] ?? ''; ?>"
                                                     data-category="<?php echo !empty($row['cate']) ? htmlspecialchars($row['cate']) : ''; ?>">
                                                     <span><?php echo $limite !== 0 ? number_format($limite, 2) : 'not defined'; ?></span>
-                                                    <span
-                                                        class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">edit</span>
+                                                    <span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity">edit</span>
                                                 </button>
                                             </td>
+
                                             <td class="px-6 py-4">
                                                 <div class="space-y-1">
                                                     <div class="flex items-center gap-2">
-                                                        <span
-                                                            class="font-semibold <?php echo $rest > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'; ?>">
+                                                        <span class="font-semibold <?php echo $rest > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'; ?>">
                                                             <?php echo $rest !== 0 ? number_format($rest, 2) : 'not defined'; ?>
                                                         </span>
                                                         <?php if ($limite > 0): ?>
@@ -320,57 +267,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                         <?php endif; ?>
                                                     </div>
                                                     <?php if ($limite > 0): ?>
-                                                        <div
-                                                            class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                        <div class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                                             <div class="h-full <?php echo $percentage > 80 ? 'bg-red-500' : ($percentage > 50 ? 'bg-orange-500' : 'bg-green-500'); ?> transition-all"
                                                                 style="width: <?php echo min($percentage, 100); ?>%"></div>
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
                                             </td>
-                                            <td class="px-6 py-4">
-                                                <form action="#" method="POST" id="FormActive<?= $id_Cat ?>"
-                                                    class="inline-block">
-                                                    <select name="IsActive" id="SelActive<?= $id_Cat ?>"
-                                                        class="px-4 py-2 rounded-lg border transition-all cursor-pointer
-                                                        <?php echo $stat ? 'bg-green-100 dark:bg-green-900/30 border-green-500 dark:border-green-700 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'; ?>">
-                                                        <option value="<?= $stat ?>">
-                                                            <?php if ($stat) {
-                                                                echo '✓ Enabled';
-                                                                $stat = 0;
-                                                            } else {
-                                                                echo '✗ Disabled';
-                                                                $stat = 1;
-                                                            } ?>
-                                                        </option>
-                                                        <option value="<?= $stat ?>">
-                                                            <?php if ($stat) {
-                                                                echo '✓ Enabled';
-                                                            } else {
-                                                                echo '✗ Disabled';
-                                                            } ?>
-                                                        </option>
-                                                    </select>
-                                                    <input type="hidden" name="id_cat" value="<?= $id_Cat ?>">
-                                                    <script>
-                                                            (function () {
-                                                                const select = document.getElementById("SelActive<?= $id_Cat ?>");
-                                                                const form = document.getElementById("FormActive<?= $id_Cat ?>");
-                                                                select.addEventListener('change', () => {
-                                                                    form.submit();
-                                                                });
-                                                            })();
-                                                    </script>
-                                                </form>
-                                            </td>
                                         </tr>
                                     <?php endwhile; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="5" class="px-6 py-12 text-center">
+                                        <td colspan="4" class="px-6 py-12 text-center">
                                             <div class="flex flex-col items-center gap-3">
-                                                <span
-                                                    class="material-symbols-outlined text-4xl text-gray-400">category_off</span>
+                                                <span class="material-symbols-outlined text-4xl text-gray-400">category_off</span>
                                                 <p class="text-gray-500 dark:text-gray-400">No categories defined yet</p>
                                             </div>
                                         </td>
@@ -386,17 +296,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <!-- Edit Limit Modal -->
     <div id="limitModal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center backdrop-blur-sm">
-        <div
-            class="bg-card-light dark:bg-card-dark rounded-xl shadow-2xl w-full max-w-md mx-4 border border-border-light dark:border-border-dark overflow-hidden">
+        <div class="bg-card-light dark:bg-card-dark rounded-xl shadow-2xl w-full max-w-md mx-4 border border-border-light dark:border-border-dark overflow-hidden">
 
             <!-- Modal Header -->
-            <div
-                class="bg-gradient-to-r from-orange-500/10 to-orange-600/10 dark:from-orange-500/20 dark:to-orange-600/20 px-6 py-4 border-b border-border-light dark:border-border-dark">
+            <div class="bg-gradient-to-r from-orange-500/10 to-orange-600/10 dark:from-orange-500/20 dark:to-orange-600/20 px-6 py-4 border-b border-border-light dark:border-border-dark">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="bg-orange-500/20 dark:bg-orange-500/30 rounded-full p-2">
-                            <span
-                                class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-xl">trending_up</span>
+                            <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-xl">trending_up</span>
                         </div>
                         <h3 class="text-xl font-bold text-gray-900 dark:text-white">Edit Spending Limit</h3>
                     </div>
@@ -418,8 +325,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             Category
                         </span>
                     </label>
-                    <div
-                        class="px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark">
+                    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-border-light dark:border-border-dark">
                         <p id="category_name" class="text-lg font-semibold text-gray-900 dark:text-white"></p>
                     </div>
                 </div>
@@ -432,8 +338,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </span>
                     </label>
                     <div class="relative">
-                        <span
-                            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-semibold">MAD</span>
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-semibold">MAD</span>
                         <input type="number" step="0.01" min="0" name="new_limit" id="new_limit"
                             class="w-full pl-16 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
                             placeholder="0.00" required>
@@ -535,5 +440,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         });
     </script>
 </body>
-
 </html>

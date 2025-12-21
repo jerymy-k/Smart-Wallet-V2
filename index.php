@@ -38,7 +38,7 @@ $balance = $conn->query("SELECT balance FROM cards WHERE user_id = $user_id");
 $total_incomes = $sum_inco['total'] ?? 0;
 $total_expenses = $sum_expe['total'] ?? 0;
 $current_balance = 0;
-while($row = $balance->fetch_assoc()){
+while ($row = $balance->fetch_assoc()) {
     $current_balance += $row['balance'];
 }
 
@@ -158,6 +158,11 @@ $recent_expenses_result = $recent_expenses->get_result();
                         href="transferts.php">
                         <span class="material-symbols-outlined">send_money</span>
                         <p class="text-sm font-semibold">Transfers</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="recurrents.php">
+                        <span class="material-symbols-outlined">repeat</span>
+                        <p class="text-sm font-medium">Recurrents</p>
                     </a>
                 </nav>
 

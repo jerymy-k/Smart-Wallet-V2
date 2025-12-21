@@ -178,3 +178,23 @@ CREATE TABLE IF NOT EXISTS transfertss (
     FOREIGN KEY (sender_id) REFERENCES userinfo(id) ON DELETE CASCADE,
     FOREIGN KEY (recipient_id) REFERENCES userinfo(id) ON DELETE CASCADE
 );
+
+ALTER TABLE categorie DROP COLUMN IsActive;
+
+CREATE TABLE monthly_recurrents (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  card_id INT NOT NULL,
+
+  type ENUM('income','expense') NOT NULL,
+  title VARCHAR(120) NOT NULL,
+  category_id INT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  last_run DATE NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  INDEX (user_id),
+  INDEX (is_active)
+);

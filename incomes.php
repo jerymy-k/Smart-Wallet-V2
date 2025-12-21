@@ -132,6 +132,11 @@ $cate_inco = $cate_inco->get_result();
                         <span class="material-symbols-outlined">send_money</span>
                         <p class="text-sm font-semibold">Transfers</p>
                     </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="recurrents.php">
+                        <span class="material-symbols-outlined">repeat</span>
+                        <p class="text-sm font-medium">Recurrents</p>
+                    </a>
                 </nav>
 
                 <div class="flex flex-col gap-2 pt-4 border-t border-border-light dark:border-border-dark">

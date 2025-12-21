@@ -75,11 +75,13 @@ $card_user = $card_user->get_result();
     <div class="flex h-screen">
 
         <!-- Sidebar -->
-        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card-light dark:bg-card-dark border-r border-border-light dark:border-border-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+        <aside id="sidebar"
+            class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card-light dark:bg-card-dark border-r border-border-light dark:border-border-dark transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
             <div class="flex flex-col flex-grow p-4">
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-3">
-                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-14" style="background-image:url('img/SmartWallet.png')"></div>
+                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-14"
+                            style="background-image:url('img/SmartWallet.png')"></div>
                         <div>
                             <h1 class="text-gray-900 dark:text-white text-base font-bold">SmartWallet</h1>
                             <p class="text-gray-500 dark:text-gray-400 text-sm">Personal Finance</p>
@@ -91,38 +93,51 @@ $card_user = $card_user->get_result();
                 </div>
 
                 <nav class="flex flex-col gap-2 flex-grow">
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="index.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="index.php">
                         <span class="material-symbols-outlined">dashboard</span>
                         <p class="text-sm font-medium">Dashboard</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="incomes.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="incomes.php">
                         <span class="material-symbols-outlined">account_balance_wallet</span>
                         <p class="text-sm font-medium">Incomes</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="expenses.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="expenses.php">
                         <span class="material-symbols-outlined">receipt_long</span>
                         <p class="text-sm font-medium">Expenses</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="categories.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="categories.php">
                         <span class="material-symbols-outlined">category</span>
                         <p class="text-sm font-medium">Categories</p>
                     </a>
-                                        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary transition-colors" href="cards.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary transition-colors"
+                        href="cards.php">
                         <span class="material-symbols-outlined">credit_card</span>
                         <p class="text-sm font-medium">Cards</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="transferts.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="transferts.php">
                         <span class="material-symbols-outlined">send_money</span>
                         <p class="text-sm font-semibold">Transfers</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="recurrents.php">
+                        <span class="material-symbols-outlined">repeat</span>
+                        <p class="text-sm font-medium">Recurrents</p>
                     </a>
                 </nav>
 
                 <div class="flex flex-col gap-2 pt-4 border-t border-border-light dark:border-border-dark">
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="#">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="#">
                         <span class="material-symbols-outlined">settings</span>
                         <p class="text-sm font-medium">Settings</p>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors" href="logout.php">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="logout.php">
                         <span class="material-symbols-outlined">logout</span>
                         <p class="text-sm font-medium">Logout</p>
                     </a>

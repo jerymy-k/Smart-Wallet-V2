@@ -125,24 +125,29 @@ $result_expenses = $expenses_query->get_result();
                         <p class="text-sm font-medium">Incomes</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary transition-colors"
-                    href="expenses.php">
-                    <span class="material-symbols-outlined">receipt_long</span>
-                    <p class="text-sm font-medium">Expenses</p>
-                </a>
-                <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                href="categories.php">
-                <span class="material-symbols-outlined">category</span>
-                <p class="text-sm font-medium">Categories</p>
+                        href="expenses.php">
+                        <span class="material-symbols-outlined">receipt_long</span>
+                        <p class="text-sm font-medium">Expenses</p>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
-                    href="cards.php">
-                    <span class="material-symbols-outlined">credit_card</span>
-                    <p class="text-sm font-medium">Cards</p>
-                </a>
-                <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="categories.php">
+                        <span class="material-symbols-outlined">category</span>
+                        <p class="text-sm font-medium">Categories</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="cards.php">
+                        <span class="material-symbols-outlined">credit_card</span>
+                        <p class="text-sm font-medium">Cards</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
                         href="transferts.php">
                         <span class="material-symbols-outlined">send_money</span>
                         <p class="text-sm font-semibold">Transfers</p>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+                        href="recurrents.php">
+                        <span class="material-symbols-outlined">repeat</span>
+                        <p class="text-sm font-medium">Recurrents</p>
                     </a>
                 </nav>
 
