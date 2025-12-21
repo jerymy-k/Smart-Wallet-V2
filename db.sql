@@ -142,6 +142,7 @@ CREATE TABLE cate_inco (
     cate_name VARCHAR(50) NOT NULL
 );
 USE smartwallet;
+SELECT count(id) as cardsCount FROM cards WHERE user_id = 5;
 INSERT INTO cate_inco (cate_name) VALUES
 ('Salary'),
 ('Freelance'),

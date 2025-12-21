@@ -16,6 +16,11 @@ if (!$auth['stat']) {
 }
 
 $id = $_SESSION['id'];
+$there_is_a_card = $conn->query("SELECT count(id) as cardsCount FROM cards WHERE user_id = $id")->fetch_assoc();
+if($there_is_a_card['cardsCount'] == 0){
+    header("location: add_first_card.php");
+    exit;
+}
 $reslt = $conn->query("SELECT stat, FullName, email FROM userinfo WHERE id = $id");
 $user_info = $reslt->fetch_assoc();
 $card_user = $conn->prepare("SELECT * FROM cards WHERE user_id = ?");

@@ -19,6 +19,11 @@ if (!isset($auth['stat']) || !$auth['stat']) {
 }
 
 $user_id = $_SESSION['id'];
+$there_is_a_card = $conn->query("SELECT count(id) as cardsCount FROM cards WHERE user_id = $user_id")->fetch_assoc();
+if ($there_is_a_card['cardsCount'] == 0) {
+    header("location: add_first_card.php");
+    exit;
+}
 
 // Get user info
 $user_query = $conn->prepare("SELECT FullName, email FROM userinfo WHERE id = ?");
@@ -388,7 +393,8 @@ if (isset($_SESSION['transfer_error'])) {
                                         <p class="text-sm text-gray-600 dark:text-gray-400">Sent</p>
                                     </div>
                                     <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                                        <?php echo number_format($total_sent, 2); ?></p>
+                                        <?php echo number_format($total_sent, 2); ?>
+                                    </p>
                                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">MAD this month</p>
                                 </div>
 
@@ -399,7 +405,8 @@ if (isset($_SESSION['transfer_error'])) {
                                         <p class="text-sm text-gray-600 dark:text-gray-400">Received</p>
                                     </div>
                                     <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                                        <?php echo number_format($total_received, 2); ?></p>
+                                        <?php echo number_format($total_received, 2); ?>
+                                    </p>
                                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">MAD this month</p>
                                 </div>
                             </div>
@@ -467,7 +474,8 @@ if (isset($_SESSION['transfer_error'])) {
                                             </div>
                                             <p
                                                 class="text-sm font-bold <?php echo $is_sent ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'; ?>">
-                                                <?php echo $is_sent ? '-' : '+'; ?>            <?php echo number_format($transfer['amount'], 2); ?>
+                                                <?php echo $is_sent ? '-' : '+'; ?>
+                                                <?php echo number_format($transfer['amount'], 2); ?>
                                             </p>
                                         </div>
                                         <?php

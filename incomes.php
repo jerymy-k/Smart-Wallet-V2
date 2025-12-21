@@ -15,6 +15,11 @@ if (!$auth['stat']) {
     header("location: authentication.php");
 }
 $id = $_SESSION['id'];
+$there_is_a_card = $conn->query("SELECT count(id) as cardsCount FROM cards WHERE user_id = $id")->fetch_assoc();
+if($there_is_a_card['cardsCount'] == 0){
+    header("location: add_first_card.php");
+    exit;
+}
 $bank_name = $conn->prepare("SELECT id ,bank_name FROM cards WHERE user_id = ?");
 $bank_name->bind_param("i", $id);
 $bank_name->execute();

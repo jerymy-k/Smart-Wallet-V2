@@ -10,8 +10,12 @@ if (!isset($_SESSION['id'])) {
     header("location: login.php");
     exit;
 }
-
 $user_id = (int)$_SESSION['id'];
+$there_is_a_card = $conn->query("SELECT count(id) as cardsCount FROM cards WHERE user_id = $user_id")->fetch_assoc();
+if($there_is_a_card['cardsCount'] == 0){
+    header("location: add_first_card.php");
+    exit;
+}
 
 // Auth check
 $reslt = $conn->query("SELECT stat FROM userinfo WHERE id = $user_id");

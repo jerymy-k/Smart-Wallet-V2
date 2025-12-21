@@ -11,31 +11,31 @@ if(!isset($_SESSION['pending_user_id'])) {
 $user_id = $_SESSION['pending_user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    
+
     $card_name = trim($_POST['card_name']);
     $bank_name = trim($_POST['bank_name']);
     $initial_balance = floatval($_POST['initial_balance']);
-    
+
     if(strlen($card_name) < 2) {
-        $_SESSION['ereur'] = 'Card name must be at least 2 characters';
+        $_SESSION['ereur'] = 'Card name must be at least 2 characters.';
     } else if(empty($bank_name)) {
-        $_SESSION['ereur'] = 'Please select a bank';
+        $_SESSION['ereur'] = 'Please select a bank.';
     } else if($initial_balance < 0) {
-        $_SESSION['ereur'] = 'Balance cannot be negative';
+        $_SESSION['ereur'] = 'Balance cannot be negative.';
     } else {
         // Insert the first card WITHOUT making it principal
         $stmt = $conn->prepare("INSERT INTO cards (user_id, card_name, bank_name, initial_balance, balance) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("issdd", $user_id, $card_name, $bank_name, $initial_balance, $initial_balance);
-        
+
         if($stmt->execute()) {
             // Complete signup - login the user
             $_SESSION['id'] = $user_id;
             $_SESSION['name'] = $_SESSION['pending_user_name'];
-            
+
             // Clean up pending session data
             unset($_SESSION['pending_user_id']);
             unset($_SESSION['pending_user_name']);
-            
+
             $_SESSION['success'] = 'Welcome! Your account is ready.';
             header("location: index.php");
             exit();
@@ -73,9 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center p-4">
-    
+
     <div class="bg-card-light dark:bg-card-dark rounded-xl shadow-2xl w-full max-w-md border border-border-light dark:border-border-dark overflow-hidden">
-        
+
         <!-- Header -->
         <div class="bg-gradient-to-r from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 px-6 py-4 border-b border-border-light dark:border-border-dark">
             <div class="flex items-center gap-3">
@@ -91,11 +91,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <!-- Body -->
         <form method="POST" class="p-6 space-y-5">
-            
+
+            <!-- ✅ SUCCESS MESSAGE -->
+            <?php if(isset($_SESSION['success'])): ?>
+                <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg flex items-center gap-2">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span><?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></span>
+                </div>
+            <?php endif; ?>
+
+            <!-- ✅ ERROR MESSAGE -->
             <?php if(isset($_SESSION['ereur'])): ?>
                 <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg flex items-center gap-2">
                     <span class="material-symbols-outlined">error</span>
-                    <span><?php echo $_SESSION['ereur']; unset($_SESSION['ereur']); ?></span>
+                    <span><?php echo htmlspecialchars($_SESSION['ereur']); unset($_SESSION['ereur']); ?></span>
                 </div>
             <?php endif; ?>
 

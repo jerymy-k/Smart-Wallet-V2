@@ -15,7 +15,11 @@ if (!$auth || !$auth['stat']) {
   header("location: authentication.php");
   exit;
 }
-
+$there_is_a_card = $conn->query("SELECT count(id) as cardsCount FROM cards WHERE user_id = $user_id")->fetch_assoc();
+if ($there_is_a_card['cardsCount'] == 0) {
+  header("location: add_first_card.php");
+  exit;
+}
 // User info
 $reslt = $conn->query("SELECT FullName, email FROM userinfo WHERE id = $user_id");
 $user_info = $reslt ? $reslt->fetch_assoc() : ['FullName' => 'User', 'email' => ''];
@@ -169,7 +173,8 @@ $stmt->close();
         <div class="flex items-center gap-3">
           <div class="hidden md:block text-right">
             <p class="text-sm font-bold text-gray-900 dark:text-white">
-              <?php echo htmlspecialchars($user_info['FullName']); ?></p>
+              <?php echo htmlspecialchars($user_info['FullName']); ?>
+            </p>
             <p class="text-xs text-gray-500"><?php echo htmlspecialchars($user_info['email']); ?></p>
           </div>
           <div

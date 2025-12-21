@@ -18,7 +18,11 @@ $user_id = $_SESSION['id'];
 // Verify user status
 $reslt = $conn->query("SELECT stat, FullName, email FROM userinfo WHERE id = $user_id");
 $user_info = $reslt->fetch_assoc();
-
+$there_is_a_card = $conn->query("SELECT count(id) as cardsCount FROM cards WHERE user_id = $user_id")->fetch_assoc();
+if($there_is_a_card['cardsCount'] == 0){
+    header("location: add_first_card.php");
+    exit;
+}
 if (!$user_info['stat']) {
     header("location: authentication.php");
     exit;
